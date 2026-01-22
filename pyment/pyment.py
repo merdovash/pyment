@@ -35,7 +35,7 @@ class PyComment(object):
     """
     def __init__(self, input_file, input_style=None, output_style='reST', quotes='"""', first_line=True,
                  convert_only=False, config_file=None, ignore_private=False, num_of_spaces=4, skip_empty=False,
-                 **kwargs):
+                 file_comment=False, **kwargs):
         """Sets the configuration including the source to proceed and options.
 
         :param input_file: path name (file or folder)
@@ -50,6 +50,7 @@ class PyComment(object):
         :param ignore_private: don't proceed the private methods/functions starting with __ (two underscores)
         :param num_of_spaces: the number of spaces for a tab on output
         :param skip_empty: if set, will not write the params, returns, or raises sections if they are empty
+        :param file_comment: if set, will add a file comment with the file name at the beginning of the file
 
         """
         self.file_type = '.py'
@@ -69,6 +70,7 @@ class PyComment(object):
         self.ignore_private = ignore_private
         self.num_of_spaces = num_of_spaces
         self.skip_empty = skip_empty
+        self.file_comment = file_comment
         self.kwargs = kwargs
 
     def _parse(self):
@@ -271,6 +273,13 @@ class PyComment(object):
             self._parse()
         list_from = self.input_lines
         list_to = []
+        
+        # Add file comment at the beginning if flag is set
+        if self.file_comment:
+            filename = os.path.basename(self.input_file) if self.input_file != '-' else 'stdin'
+            file_comment_lines = '{0}{1}\n{0}'.format(self.quotes, filename)
+            list_to.append(file_comment_lines + '\n')
+        
         last = 0
         for e in self.docs_list:
             start, end = e['location']

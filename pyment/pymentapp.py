@@ -60,7 +60,7 @@ def get_config(config_file):
                 if len(line.strip()):
                     key, value = line.split("=", 1)
                     key, value = key.strip(), value.strip()
-                    if key in ['init2class', 'first_line', 'convert_only']:
+                    if key in ['init2class', 'first_line', 'convert_only', 'file_comment']:
                         value = tobool(value)
                     if key == 'indent':
                         value = int(value)
@@ -70,7 +70,7 @@ def get_config(config_file):
 
 def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
         init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False):
+        skip_empty=False, file_comment=False):
     if input_style == 'auto':
         input_style = None
 
@@ -87,6 +87,8 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
         output_style = config.pop('output_style')
     if 'first_line' in config:
         first_line = config.pop('first_line')
+    if 'file_comment' in config:
+        file_comment = config.pop('file_comment')
     for f in files:
         if os.path.isdir(source):
             path = source + os.sep + os.path.relpath(os.path.abspath(f), os.path.abspath(source))
@@ -101,6 +103,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                       convert_only=convert,
                       num_of_spaces=spaces,
                       skip_empty=skip_empty,
+                      file_comment=file_comment,
                       **config)
         c.proceed()
         if init2class:
@@ -152,6 +155,9 @@ def main():
     parser.add_argument('-e', '--skip-empty', action='store_true', dest='skip_empty',
                         default=False,
                         help="Don't write params, returns, or raises sections if they are empty.")
+    parser.add_argument('--file-comment', action='store_true', dest='file_comment',
+                        default=False,
+                        help="Add a file comment with the file name at the beginning of the file.")
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -172,7 +178,8 @@ def main():
         tobool(args.first_line), args.quotes,
         args.init2class, args.convert, config_file,
         tobool(args.ignore_private), overwrite=args.overwrite,
-        spaces=args.spaces, skip_empty=args.skip_empty)
+        spaces=args.spaces, skip_empty=args.skip_empty,
+        file_comment=args.file_comment)
 
 
 if __name__ == "__main__":
