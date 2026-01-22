@@ -14,28 +14,34 @@ MAX_DEPTH_RECUR = 50
 ''' The maximum depth to reach while recursively exploring sub folders'''
 
 
-def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py'):
+def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions=None):
     """Retrieve the list of files from a folder.
 
     @param path: file or directory where to search files
     @param recursive: if True will search also sub-directories
     @param depth: if explore recursively, the depth of sub directories to follow
-    @param file_ext: the files extension to get. Default is '.py'
+    @param file_ext: the files extension to get. Default is '.py' (deprecated, use extensions instead)
+    @param extensions: list of file extensions to filter by (e.g., ['.py', '.js']). If None, uses file_ext for backward compatibility.
     @return: the file list retrieved. if the input is a file then a one element list.
 
     """
     file_list = []
     if os.path.isfile(path) or path == '-':
         return [path]
+    
+    # Use extensions if provided, otherwise fall back to file_ext for backward compatibility
+    if extensions is None:
+        extensions = [file_ext]
+    
     if path[-1] != os.sep:
         path = path + os.sep
     for f in glob.glob(path + "*"):
         if os.path.isdir(f):
             if depth < MAX_DEPTH_RECUR:  # avoid infinite recursive loop
-                file_list.extend(get_files_from_dir(f, recursive, depth + 1))
+                file_list.extend(get_files_from_dir(f, recursive, depth + 1, file_ext, extensions))
             else:
                 continue
-        elif f.endswith(file_ext):
+        elif any(f.endswith(ext) for ext in extensions):
             file_list.append(f)
     return file_list
 
@@ -158,13 +164,28 @@ def main():
     parser.add_argument('--file-comment', action='store_true', dest='file_comment',
                         default=False,
                         help="Add a file comment with the file name at the beginning of the file.")
+    parser.add_argument('--extensions', metavar='extensions', dest='extensions',
+                        default=None,
+                        help='Comma-separated list of file extensions to process (e.g., "py,js"). Extensions can include or omit the leading dot.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
     args = parser.parse_args()
     source = args.path
 
-    files = get_files_from_dir(source)
+    # Parse extensions if provided
+    extensions = None
+    if args.extensions:
+        # Split by comma and normalize extensions (add leading dot if missing)
+        ext_list = [ext.strip() for ext in args.extensions.split(',')]
+        extensions = []
+        for ext in ext_list:
+            if ext and not ext.startswith('.'):
+                extensions.append('.' + ext)
+            elif ext:
+                extensions.append(ext)
+
+    files = get_files_from_dir(source, extensions=extensions)
     if not files:
         msg = BaseException("No files were found matching {0}".format(args.path))
         raise msg
