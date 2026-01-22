@@ -36,7 +36,7 @@ class PyComment(object):
     """
     def __init__(self, input_file, input_style=None, output_style='reST', quotes='"""', first_line=True,
                  convert_only=False, config_file=None, ignore_private=False, num_of_spaces=4, skip_empty=False,
-                 file_comment=False, **kwargs):
+                 file_comment=False, encoding='utf-8', **kwargs):
         """Sets the configuration including the source to proceed and options.
 
         :param input_file: path name (file or folder)
@@ -52,6 +52,7 @@ class PyComment(object):
         :param num_of_spaces: the number of spaces for a tab on output
         :param skip_empty: if set, will not write the params, returns, or raises sections if they are empty
         :param file_comment: if set, will add a file comment with the file name at the beginning of the file
+        :param encoding: the encoding to use when reading and writing files (default 'utf-8')
 
         """
         self.file_type = '.py'
@@ -72,6 +73,7 @@ class PyComment(object):
         self.num_of_spaces = num_of_spaces
         self.skip_empty = skip_empty
         self.file_comment = file_comment
+        self.encoding = encoding
         self.kwargs = kwargs
         self._has_module_docstring_cache = None
 
@@ -250,7 +252,7 @@ class PyComment(object):
             if self.input_file == '-':
                 fd = sys.stdin
             else:
-                fd = open(self.input_file)
+                fd = open(self.input_file, 'r', encoding=self.encoding)
 
             self.input_lines = fd.readlines()
 
@@ -512,7 +514,7 @@ class PyComment(object):
 
         :return: None
         """
-        with open(patch_file, 'w') as f:
+        with open(patch_file, 'w', encoding=self.encoding) as f:
             f.writelines(lines_to_write)
 
     def overwrite_source_file(self, lines_to_write):
@@ -526,7 +528,7 @@ class PyComment(object):
         tmp_filename = '{0}.writing'.format(self.input_file)
         ok = False
         try:
-            with open(tmp_filename, 'w') as fh:
+            with open(tmp_filename, 'w', encoding=self.encoding) as fh:
                 fh.writelines(lines_to_write)
             ok = True
         finally:

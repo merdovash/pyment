@@ -47,7 +47,8 @@ def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions
 
 
 def print_processing_progress(filename, pycomment_obj, file_comment, is_folder=False):
-    """Print the processing progress for a file with detailed action counts.
+    """Print the processing actions for a file with detailed action counts.
+    Note: filename should be printed before calling this function.
     
     @param filename: the file being processed
     @param pycomment_obj: the PyComment object that processed the file
@@ -81,17 +82,18 @@ def print_processing_progress(filename, pycomment_obj, file_comment, is_folder=F
     if num_functions > 0:
         actions.append("{0} function docstring(s)".format(num_functions))
     
-    # Print progress
+    # Print actions on the same line (filename was already printed)
     if actions:
-        print("Processing: {0} - {1}".format(filename, ", ".join(actions)))
+        print(": {0}".format(", ".join(actions)))
     else:
-        print("Processing: {0} - no actions applied".format(filename))
+        print(": no actions applied")
 
 
-def get_config(config_file):
+def get_config(config_file, encoding='utf-8'):
     """Get the configuration from a file.
 
     @param config_file: the configuration file
+    @param encoding: the encoding to use when reading the config file (default 'utf-8')
     @return: the configuration
     @rtype: dict
 
@@ -100,29 +102,28 @@ def get_config(config_file):
     tobool = lambda s: True if s.lower() == 'true' else False
     if config_file:
         try:
-            f = open(config_file, 'r')
+            with open(config_file, 'r', encoding=encoding) as f:
+                for line in f.readlines():
+                    if len(line.strip()):
+                        key, value = line.split("=", 1)
+                        key, value = key.strip(), value.strip()
+                        if key in ['init2class', 'first_line', 'convert_only', 'file_comment']:
+                            value = tobool(value)
+                        if key == 'indent':
+                            value = int(value)
+                        config[key] = value
         except:
             print ("Unable to open configuration file '{0}'".format(config_file))
-        else:
-            for line in f.readlines():
-                if len(line.strip()):
-                    key, value = line.split("=", 1)
-                    key, value = key.strip(), value.strip()
-                    if key in ['init2class', 'first_line', 'convert_only', 'file_comment']:
-                        value = tobool(value)
-                    if key == 'indent':
-                        value = int(value)
-                    config[key] = value
     return config
 
 
 def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
         init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False, file_comment=False):
+        skip_empty=False, file_comment=False, encoding='utf-8'):
     if input_style == 'auto':
         input_style = None
 
-    config = get_config(config_file)
+    config = get_config(config_file, encoding=encoding)
     if 'init2class' in config:
         init2class = config.pop('init2class')
     if 'convert_only' in config:
@@ -137,12 +138,18 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
         first_line = config.pop('first_line')
     if 'file_comment' in config:
         file_comment = config.pop('file_comment')
+    if 'encoding' in config:
+        encoding = config.pop('encoding')
     for f in files:
         if os.path.isdir(source):
             path = source + os.sep + os.path.relpath(os.path.abspath(f), os.path.abspath(source))
             path = path[:-len(os.path.basename(f))]
         else:
             path = ''
+        # Print filename before processing
+        if f != '-':
+            print(f, end='')
+        
         c = PyComment(f, quotes=quotes,
                       input_style=input_style,
                       output_style=output_style,
@@ -152,12 +159,13 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                       num_of_spaces=spaces,
                       skip_empty=skip_empty,
                       file_comment=file_comment,
+                      encoding=encoding,
                       **config)
         c.proceed()
         if init2class:
             c.docs_init_to_class()
 
-        # Print processing progress
+        # Print processing actions on the same line
         print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
 
         if overwrite:
@@ -212,6 +220,8 @@ def main():
     parser.add_argument('--extensions', metavar='extensions', dest='extensions',
                         default=None,
                         help='Comma-separated list of file extensions to process (e.g., "py,js"). Extensions can include or omit the leading dot.')
+    parser.add_argument('--encoding', metavar='encoding', dest='encoding', default='utf-8',
+                        help='The encoding to use when reading and writing files (default "utf-8"). Examples: utf-8, latin1, cp1252.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -245,7 +255,7 @@ def main():
         args.init2class, args.convert, config_file,
         tobool(args.ignore_private), overwrite=args.overwrite,
         spaces=args.spaces, skip_empty=args.skip_empty,
-        file_comment=args.file_comment)
+        file_comment=args.file_comment, encoding=args.encoding)
 
 
 if __name__ == "__main__":
