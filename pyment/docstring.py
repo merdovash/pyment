@@ -987,13 +987,15 @@ class DocsTools(object):
                     param_part, param_description = line.split(':', 1)
                 else:
                     print("WARNING: malformed docstring parameter")
-                res = re.split(r'\s+', param_part.strip())
-                if len(res) == 1:
-                    param_name = res[0].strip()
-                elif len(res) == 2:
-                    param_type, param_name = res[0].strip(), res[1].strip()
-                else:
-                    print("WARNING: malformed docstring parameter")
+                    param_part = None
+                if param_part is not None:
+                    res = re.split(r'\s+', param_part.strip())
+                    if len(res) == 1:
+                        param_name = res[0].strip()
+                    elif len(res) == 2:
+                        param_type, param_name = res[0].strip(), res[1].strip()
+                    else:
+                        print("WARNING: malformed docstring parameter")
                 if param_name:
                     # keep track in case of multiline
                     last_element['nature'] = 'param'
@@ -1017,6 +1019,8 @@ class DocsTools(object):
                     param_type = param_type.strip()
                 else:
                     print("WARNING: malformed docstring parameter")
+                    param_name = None
+                    param_type = None
                 if param_name:
                     # keep track in case of multiline
                     last_element['nature'] = 'type'

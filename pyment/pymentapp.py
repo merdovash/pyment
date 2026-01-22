@@ -141,47 +141,55 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
     if 'encoding' in config:
         encoding = config.pop('encoding')
     for f in files:
-        if os.path.isdir(source):
-            path = source + os.sep + os.path.relpath(os.path.abspath(f), os.path.abspath(source))
-            path = path[:-len(os.path.basename(f))]
-        else:
-            path = ''
-        # Print filename before processing
-        if f != '-':
-            print(f, end='')
-        
-        c = PyComment(f, quotes=quotes,
-                      input_style=input_style,
-                      output_style=output_style,
-                      first_line=first_line,
-                      ignore_private=ignore_private,
-                      convert_only=convert,
-                      num_of_spaces=spaces,
-                      skip_empty=skip_empty,
-                      file_comment=file_comment,
-                      encoding=encoding,
-                      **config)
-        c.proceed()
-        if init2class:
-            c.docs_init_to_class()
-
-        # Print processing actions on the same line
-        print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
-
-        if overwrite:
-            list_from, list_to = c.compute_before_after()
-            lines_to_write = list_to
-        else:
-            lines_to_write = c.get_patch_lines(path, path)
-
-        if f == '-':
-            sys.stdout.writelines(lines_to_write)
-        else:
-            if overwrite:
-                if list_from != list_to:
-                    c.overwrite_source_file(lines_to_write)
+        try:
+            if os.path.isdir(source):
+                path = source + os.sep + os.path.relpath(os.path.abspath(f), os.path.abspath(source))
+                path = path[:-len(os.path.basename(f))]
             else:
-                c.write_patch_file(os.path.basename(f) + ".patch", lines_to_write)
+                path = ''
+            # Print filename before processing
+            if f != '-':
+                print(f, end='')
+            
+            c = PyComment(f, quotes=quotes,
+                          input_style=input_style,
+                          output_style=output_style,
+                          first_line=first_line,
+                          ignore_private=ignore_private,
+                          convert_only=convert,
+                          num_of_spaces=spaces,
+                          skip_empty=skip_empty,
+                          file_comment=file_comment,
+                          encoding=encoding,
+                          **config)
+            c.proceed()
+            if init2class:
+                c.docs_init_to_class()
+
+            # Print processing actions on the same line
+            print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
+
+            if overwrite:
+                list_from, list_to = c.compute_before_after()
+                lines_to_write = list_to
+            else:
+                lines_to_write = c.get_patch_lines(path, path)
+
+            if f == '-':
+                sys.stdout.writelines(lines_to_write)
+            else:
+                if overwrite:
+                    if list_from != list_to:
+                        c.overwrite_source_file(lines_to_write)
+                else:
+                    c.write_patch_file(os.path.basename(f) + ".patch", lines_to_write)
+        except Exception as e:
+            # Print error message and continue to next file
+            if f != '-':
+                print(f"\nError processing {f}: {str(e)}", file=sys.stderr)
+            else:
+                print(f"\nError processing stdin: {str(e)}", file=sys.stderr)
+            continue
 
 
 def main():
