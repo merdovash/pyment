@@ -89,13 +89,16 @@ class PyComment(object):
             abs_path = os.path.abspath(filepath)
             current_dir = os.path.dirname(abs_path)
             git_dir = None
+            previous_dir = None
             
             # Walk up the directory tree to find .git
-            while current_dir != os.path.dirname(current_dir):  # Stop at root
+            # Continue until we reach the root (when dirname doesn't change)
+            while current_dir != previous_dir:
                 potential_git = os.path.join(current_dir, '.git')
                 if os.path.exists(potential_git):
                     git_dir = current_dir
                     break
+                previous_dir = current_dir
                 current_dir = os.path.dirname(current_dir)
             
             if not git_dir:
@@ -128,6 +131,88 @@ class PyComment(object):
             pass
         
         return None
+
+    def _has_module_docstring(self):
+        """Check if the file already has a module-level docstring at the beginning.
+        
+        :returns: True if a module-level docstring exists, False otherwise
+        :rtype: bool
+        """
+        if not self.input_lines:
+            return False
+        
+        # Skip encoding declarations, blank lines, and imports at the start
+        i = 0
+        in_docstring = False
+        docstring_delimiter = None
+        
+        while i < len(self.input_lines):
+            line = self.input_lines[i]
+            stripped = line.strip()
+            
+            # Skip blank lines
+            if not stripped:
+                i += 1
+                continue
+            
+            # Skip encoding declarations
+            if stripped.startswith('#') and ('coding' in stripped.lower() or 'encoding' in stripped.lower()):
+                i += 1
+                continue
+            
+            # Skip imports
+            if stripped.startswith('import ') or stripped.startswith('from '):
+                i += 1
+                continue
+            
+            # Check if we're already in a docstring
+            if in_docstring:
+                # Check if this line closes the docstring
+                if docstring_delimiter in stripped:
+                    return True  # Found a complete module docstring
+                i += 1
+                continue
+            
+            # Check if this line starts a docstring
+            # Look for """ or ''' at the start (possibly with r/u/f prefix)
+            if stripped.startswith('"""') or stripped.startswith("'''"):
+                in_docstring = True
+                docstring_delimiter = '"""' if stripped.startswith('"""') else "'''"
+                # Check if it's a single-line docstring
+                if stripped.count(docstring_delimiter) >= 2:
+                    return True
+                i += 1
+                continue
+            
+            # Check for r/u/f prefixes
+            if len(stripped) >= 4:
+                if stripped[0] in ['r', 'u', 'f'] and stripped[1:4] in ['"""', "'''"]:
+                    in_docstring = True
+                    docstring_delimiter = stripped[1:4]
+                    if stripped.count(docstring_delimiter) >= 2:
+                        return True
+                    i += 1
+                    continue
+                if len(stripped) >= 5 and stripped[0] in ['r', 'u', 'f'] and stripped[1] in ['r', 'u', 'f']:
+                    if stripped[2:5] in ['"""', "'''"]:
+                        in_docstring = True
+                        docstring_delimiter = stripped[2:5]
+                        if stripped.count(docstring_delimiter) >= 2:
+                            return True
+                        i += 1
+                        continue
+            
+            # If we hit a def/class/async def, we've passed any module docstring
+            if stripped.startswith('def ') or stripped.startswith('class ') or stripped.startswith('async def '):
+                return False
+            
+            # If we hit any other non-empty line that's not a comment, no module docstring
+            if stripped and not stripped.startswith('#'):
+                return False
+            
+            i += 1
+        
+        return False
 
     def _parse(self):
         """Parses the input file's content and generates a list of its elements/docstrings.
@@ -330,8 +415,8 @@ class PyComment(object):
         list_from = self.input_lines
         list_to = []
         
-        # Add file comment at the beginning if flag is set
-        if self.file_comment:
+        # Add file comment at the beginning if flag is set and no module docstring exists
+        if self.file_comment and not self._has_module_docstring():
             if self.input_file != '-':
                 filename = os.path.basename(self.input_file)
                 # Remove extension from filename
