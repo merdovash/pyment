@@ -5,6 +5,7 @@ import re
 import difflib
 import platform
 import sys
+import subprocess
 
 from .docstring import DocString
 
@@ -72,6 +73,61 @@ class PyComment(object):
         self.skip_empty = skip_empty
         self.file_comment = file_comment
         self.kwargs = kwargs
+
+    def _get_git_first_commit_author(self, filepath):
+        """Get the author of the first commit for a file in a git repository.
+        
+        :param filepath: path to the file
+        :returns: author name if found, None otherwise
+        :rtype: str or None
+        """
+        if filepath == '-' or not os.path.isfile(filepath):
+            return None
+        
+        try:
+            # Check if file is in a git repository by finding .git directory
+            abs_path = os.path.abspath(filepath)
+            current_dir = os.path.dirname(abs_path)
+            git_dir = None
+            
+            # Walk up the directory tree to find .git
+            while current_dir != os.path.dirname(current_dir):  # Stop at root
+                potential_git = os.path.join(current_dir, '.git')
+                if os.path.exists(potential_git):
+                    git_dir = current_dir
+                    break
+                current_dir = os.path.dirname(current_dir)
+            
+            if not git_dir:
+                return None
+            
+            # Get relative path from git root
+            git_root = git_dir
+            rel_path = os.path.relpath(abs_path, git_root)
+            
+            # Get the first commit author for this file
+            # Use --reverse to get commits in chronological order, then take the first one
+            result = subprocess.run(
+                ['git', 'log', '--reverse', '--format=%an', '--', rel_path],
+                cwd=git_root,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0 and result.stdout.strip():
+                # Get the first line (first commit author)
+                author = result.stdout.strip().split('\n')[0]
+                return author if author else None
+            
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
+            # Git command failed or git is not available
+            pass
+        except Exception:
+            # Any other error, silently fail
+            pass
+        
+        return None
 
     def _parse(self):
         """Parses the input file's content and generates a list of its elements/docstrings.
@@ -280,9 +336,16 @@ class PyComment(object):
                 filename = os.path.basename(self.input_file)
                 # Remove extension from filename
                 filename = os.path.splitext(filename)[0]
+                
+                # Try to get git author of first commit
+                author = self._get_git_first_commit_author(self.input_file)
+                if author:
+                    file_comment_lines = '{0}\n{1}\nAuthor: {2}\n{0}'.format(self.quotes, filename, author)
+                else:
+                    file_comment_lines = '{0}\n{1}\n{0}'.format(self.quotes, filename)
             else:
                 filename = 'stdin'
-            file_comment_lines = '{0}\n{1}\n{0}'.format(self.quotes, filename)
+                file_comment_lines = '{0}\n{1}\n{0}'.format(self.quotes, filename)
             list_to.append(file_comment_lines + '\n')
         
         last = 0
