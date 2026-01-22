@@ -1881,7 +1881,11 @@ class DocString(object):
         if self.docs['in']['desc']:
             self.docs['out']['desc'] = self.docs['in']['desc']
         else:
-            self.docs['out']['desc'] = ''
+            # If no docstring exists, use the function or class name as the description
+            if self.element.get('name'):
+                self.docs['out']['desc'] = self.element['name']
+            else:
+                self.docs['out']['desc'] = ''
 
     def _set_params(self):
         """Sets the parameters with types, descriptions and default value if any
