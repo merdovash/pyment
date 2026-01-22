@@ -1032,8 +1032,12 @@ class DocsTools(object):
             else:
                 # suppose to be line of a multiline element
                 if last_element['nature'] == 'param':
+                    if ret[last_element['name']]['description'] is None:
+                        ret[last_element['name']]['description'] = ''
                     ret[last_element['name']]['description'] += f"\n{line}"
                 elif last_element['nature'] == 'type':
+                    if ret[last_element['name']]['description'] is None:
+                        ret[last_element['name']]['description'] = ''
                     ret[last_element['name']]['description'] += f"\n{line}"
         return ret
 
