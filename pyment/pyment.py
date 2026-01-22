@@ -73,6 +73,7 @@ class PyComment(object):
         self.skip_empty = skip_empty
         self.file_comment = file_comment
         self.kwargs = kwargs
+        self._has_module_docstring_cache = None
 
     def _get_git_first_commit_author(self, filepath):
         """Get the author of the first commit for a file in a git repository.
@@ -138,7 +139,12 @@ class PyComment(object):
         :returns: True if a module-level docstring exists, False otherwise
         :rtype: bool
         """
+        # Return cached value if available
+        if self._has_module_docstring_cache is not None:
+            return self._has_module_docstring_cache
+        
         if not self.input_lines:
+            self._has_module_docstring_cache = False
             return False
         
         # Skip encoding declarations, blank lines, and imports at the start
@@ -169,6 +175,7 @@ class PyComment(object):
             if in_docstring:
                 # Check if this line closes the docstring
                 if docstring_delimiter in stripped:
+                    self._has_module_docstring_cache = True
                     return True  # Found a complete module docstring
                 i += 1
                 continue
@@ -180,6 +187,7 @@ class PyComment(object):
                 docstring_delimiter = '"""' if stripped.startswith('"""') else "'''"
                 # Check if it's a single-line docstring
                 if stripped.count(docstring_delimiter) >= 2:
+                    self._has_module_docstring_cache = True
                     return True
                 i += 1
                 continue
@@ -190,6 +198,7 @@ class PyComment(object):
                     in_docstring = True
                     docstring_delimiter = stripped[1:4]
                     if stripped.count(docstring_delimiter) >= 2:
+                        self._has_module_docstring_cache = True
                         return True
                     i += 1
                     continue
@@ -198,20 +207,24 @@ class PyComment(object):
                         in_docstring = True
                         docstring_delimiter = stripped[2:5]
                         if stripped.count(docstring_delimiter) >= 2:
+                            self._has_module_docstring_cache = True
                             return True
                         i += 1
                         continue
             
             # If we hit a def/class/async def, we've passed any module docstring
             if stripped.startswith('def ') or stripped.startswith('class ') or stripped.startswith('async def '):
+                self._has_module_docstring_cache = False
                 return False
             
             # If we hit any other non-empty line that's not a comment, no module docstring
             if stripped and not stripped.startswith('#'):
+                self._has_module_docstring_cache = False
                 return False
             
             i += 1
         
+        self._has_module_docstring_cache = False
         return False
 
     def _parse(self):

@@ -46,6 +46,48 @@ def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions
     return file_list
 
 
+def print_processing_progress(filename, pycomment_obj, file_comment, is_folder=False):
+    """Print the processing progress for a file with detailed action counts.
+    
+    @param filename: the file being processed
+    @param pycomment_obj: the PyComment object that processed the file
+    @param file_comment: whether file comment feature is enabled
+    @param is_folder: whether processing a folder (affects when to print)
+    """
+    if filename == '-':
+        return
+    
+    # Count different types of actions (docstrings processed)
+    num_classes = 0
+    num_functions = 0
+    num_file = 0
+    
+    for e in pycomment_obj.docs_list:
+        if e['docs'].element.get('deftype') == 'class':
+            num_classes += 1
+        elif e['docs'].element.get('deftype') == 'def':
+            num_functions += 1
+    
+    # Check if file docstring was added (use cached result)
+    if file_comment and not pycomment_obj._has_module_docstring():
+        num_file = 1
+    
+    # Build action list
+    actions = []
+    if num_file > 0:
+        actions.append("{0} file docstring".format(num_file))
+    if num_classes > 0:
+        actions.append("{0} class docstring(s)".format(num_classes))
+    if num_functions > 0:
+        actions.append("{0} function docstring(s)".format(num_functions))
+    
+    # Print progress
+    if actions:
+        print("Processing: {0} - {1}".format(filename, ", ".join(actions)))
+    else:
+        print("Processing: {0} - no actions applied".format(filename))
+
+
 def get_config(config_file):
     """Get the configuration from a file.
 
@@ -114,6 +156,9 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
         c.proceed()
         if init2class:
             c.docs_init_to_class()
+
+        # Print processing progress
+        print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
 
         if overwrite:
             list_from, list_to = c.compute_before_after()
