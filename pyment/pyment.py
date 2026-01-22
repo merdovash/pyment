@@ -276,8 +276,13 @@ class PyComment(object):
         
         # Add file comment at the beginning if flag is set
         if self.file_comment:
-            filename = os.path.basename(self.input_file) if self.input_file != '-' else 'stdin'
-            file_comment_lines = '{0}{1}\n{0}'.format(self.quotes, filename)
+            if self.input_file != '-':
+                filename = os.path.basename(self.input_file)
+                # Remove extension from filename
+                filename = os.path.splitext(filename)[0]
+            else:
+                filename = 'stdin'
+            file_comment_lines = '{0}\n{1}\n{0}'.format(self.quotes, filename)
             list_to.append(file_comment_lines + '\n')
         
         last = 0
