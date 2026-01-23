@@ -143,32 +143,32 @@ class DocStringTests(unittest.TestCase):
         doc = googledocs
         d = docs.DocString(myelem, '    ', doc)
         d._extract_docs_params()
-        self.assertTrue(d.get_input_style() == 'google')
+        self.assertEqual('google', d.get_input_style())
 
     def testAutoInputStyleGoogledoc(self):
         doc = googledocs
         d = docs.DocString(myelem, '    ', doc)
-        self.assertTrue(d.get_input_style() == 'google')
+        self.assertEqual('google', d.get_input_style())
 
     def testAutoInputStyleNumpydoc(self):
         doc = mynumpydocs
         d = docs.DocString(myelem, '    ', doc)
-        self.assertTrue(d.get_input_style() == 'numpydoc')
+        self.assertEqual('numpydoc', d.get_input_style())
 
     def testAutoInputStyleJavadoc(self):
         doc = mydocs
         d = docs.DocString(myelem, '    ', doc)
-        self.assertTrue(d.get_input_style() == 'javadoc')
+        self.assertEqual('javadoc', d.get_input_style())
 
     def testAutoInputStyleReST(self):
         doc = torest(mydocs)
         d = docs.DocString(myelem, '    ', doc)
-        self.assertTrue(d.get_input_style() == 'reST')
+        self.assertEqual('reST', d.get_input_style())
 
     def testAutoInputStyleGroups(self):
         doc = mygrpdocs
         d = docs.DocString(myelem, '    ', doc)
-        self.assertTrue(d.get_input_style() == 'groups')
+        self.assertEqual('groups', d.get_input_style())
 
     def testSameOutputJavadocReST(self):
         doc = mydocs
@@ -181,11 +181,12 @@ class DocStringTests(unittest.TestCase):
 
     def testParsingElement(self):
         d = docs.DocString(myelem, '    ')
-        self.assertTrue(d.element['deftype'] == 'def')
-        self.assertTrue(d.element['name'] == 'my_method')
-        self.assertTrue(len(d.element['params']) == 3)
+        self.assertEqual('def', d.element['deftype'])
+        self.assertEqual('my_method', d.element['name'])
+        self.assertEqual(3, len(d.element['params']))
         self.assertTrue(type(d.element['params'][0]['param']) is str)
-        self.assertTrue((d.element['params'][2]['param'], d.element['params'][2]['default']) == ('third', '"value"'))
+        self.assertEqual(('third', '"value"'),
+                         (d.element['params'][2]['param'], d.element['params'][2]['default']))
 
     def testIfParsedDocs(self):
         doc = mydocs
@@ -233,12 +234,12 @@ class DocStringTests(unittest.TestCase):
         doc = torest(mydocs)
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['params']) == 2)
+        self.assertEqual(2, len(d.docs['in']['params']))
         self.assertTrue(type(d.docs['in']['params'][1]) is tuple)
         # param's name
-        self.assertTrue(d.docs['in']['params'][1][0] == 'second')
+        self.assertEqual('second', d.docs['in']['params'][1][0])
         # param's type
-        self.assertTrue(d.docs['in']['params'][0][2] == 'str')
+        self.assertEqual('str', d.docs['in']['params'][0][2])
         self.assertFalse(d.docs['in']['params'][1][2])
         # param's description
         self.assertTrue(d.docs['in']['params'][0][1].startswith("the 1"))
@@ -247,20 +248,20 @@ class DocStringTests(unittest.TestCase):
         doc = googledocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['params']) == 3)
-        self.assertTrue(d.docs['in']['params'][0][0] == 'first')
-        self.assertTrue(d.docs['in']['params'][0][2] == 'str')
+        self.assertEqual(3, len(d.docs['in']['params']))
+        self.assertEqual('first', d.docs['in']['params'][0][0])
+        self.assertEqual('str', d.docs['in']['params'][0][2])
         self.assertTrue(d.docs['in']['params'][0][1].startswith('this is the first'))
         self.assertFalse(d.docs['in']['params'][1][2])
         self.assertTrue(d.docs['in']['params'][2][1].startswith('this is a third'))
-        self.assertTrue(d.docs['in']['params'][2][2] == 'str')
+        self.assertEqual('str', d.docs['in']['params'][2][2])
 
     def testParsingGroupsDocsParams(self):
         doc = mygrpdocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['params']) == 3)
-        self.assertTrue(d.docs['in']['params'][0][0] == 'first')
+        self.assertEqual(3, len(d.docs['in']['params']))
+        self.assertEqual('first', d.docs['in']['params'][0][0])
         self.assertTrue(d.docs['in']['params'][0][1].startswith('the 1'))
         self.assertTrue(d.docs['in']['params'][2][1].startswith('the 3rd'))
 
@@ -268,8 +269,8 @@ class DocStringTests(unittest.TestCase):
         doc = mygrpdocs2
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['params']) == 3)
-        self.assertTrue(d.docs['in']['params'][0][0] == 'first')
+        self.assertEqual(3, len(d.docs['in']['params']))
+        self.assertEqual('first', d.docs['in']['params'][0][0])
         self.assertTrue(d.docs['in']['params'][0][1].startswith('the 1'))
         self.assertTrue(d.docs['in']['params'][2][1].startswith('the 3rd'))
 
@@ -277,9 +278,9 @@ class DocStringTests(unittest.TestCase):
         doc = mynumpydocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['params']) == 3)
-        self.assertTrue(d.docs['in']['params'][0][0] == 'first')
-        self.assertTrue(d.docs['in']['params'][0][2] == 'array_like')
+        self.assertEqual(3, len(d.docs['in']['params']))
+        self.assertEqual('first', d.docs['in']['params'][0][0])
+        self.assertEqual('array_like', d.docs['in']['params'][0][2])
         self.assertTrue(d.docs['in']['params'][0][1].strip().startswith('the 1'))
         self.assertFalse(d.docs['in']['params'][1][2])
         self.assertTrue(d.docs['in']['params'][2][1].strip().endswith("default 'value'"))
@@ -289,7 +290,7 @@ class DocStringTests(unittest.TestCase):
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
         d.generate_docs()
-        self.assertTrue(len(d.docs['in']['raises']) == 2)
+        self.assertEqual(2, len(d.docs['in']['raises']))
         self.assertTrue(d.docs['in']['raises'][0][0].startswith('KeyError'))
         self.assertTrue(d.docs['in']['raises'][0][1].startswith('raises a key'))
         self.assertTrue(d.docs['in']['raises'][1][0].startswith('OtherError'))
@@ -299,40 +300,40 @@ class DocStringTests(unittest.TestCase):
         doc = googledocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['raises']) == 2)
-        self.assertTrue(d.docs['in']['raises'][0][0] == 'KeyError')
+        self.assertEqual(2, len(d.docs['in']['raises']))
+        self.assertEqual('KeyError', d.docs['in']['raises'][0][0])
         self.assertTrue(d.docs['in']['raises'][0][1].startswith('raises an'))
-        self.assertTrue(d.docs['in']['raises'][1][0] == 'OtherError')
+        self.assertEqual('OtherError', d.docs['in']['raises'][1][0])
         self.assertTrue(d.docs['in']['raises'][1][1].startswith('when an other'))
 
     def testParsingGroupsDocsRaises(self):
         doc = mygrpdocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['raises']) == 2)
-        self.assertTrue(d.docs['in']['raises'][0][0] == 'KeyError')
+        self.assertEqual(2, len(d.docs['in']['raises']))
+        self.assertEqual('KeyError', d.docs['in']['raises'][0][0])
         self.assertTrue(d.docs['in']['raises'][0][1].startswith('when a key'))
-        self.assertTrue(d.docs['in']['raises'][1][0] == 'OtherError')
+        self.assertEqual('OtherError', d.docs['in']['raises'][1][0])
         self.assertTrue(d.docs['in']['raises'][1][1].startswith('when an other'))
 
     def testParsingGroups2DocsRaises(self):
         doc = mygrpdocs2
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['raises']) == 2)
-        self.assertTrue(d.docs['in']['raises'][0][0] == 'KeyError')
+        self.assertEqual(2, len(d.docs['in']['raises']))
+        self.assertEqual('KeyError', d.docs['in']['raises'][0][0])
         self.assertTrue(d.docs['in']['raises'][0][1].startswith('when a key'))
-        self.assertTrue(d.docs['in']['raises'][1][0] == 'OtherError')
+        self.assertEqual('OtherError', d.docs['in']['raises'][1][0])
         self.assertTrue(d.docs['in']['raises'][1][1].startswith('when an other'))
 
     def testParsingNumpyDocsRaises(self):
         doc = mynumpydocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(len(d.docs['in']['raises']) == 2)
-        self.assertTrue(d.docs['in']['raises'][0][0] == 'KeyError')
+        self.assertEqual(2, len(d.docs['in']['raises']))
+        self.assertEqual('KeyError', d.docs['in']['raises'][0][0])
         self.assertTrue(d.docs['in']['raises'][0][1].strip().startswith('when a key'))
-        self.assertTrue(d.docs['in']['raises'][1][0] == 'OtherError')
+        self.assertEqual('OtherError', d.docs['in']['raises'][1][0])
         self.assertTrue(d.docs['in']['raises'][1][1].strip().startswith('when an other'))
 
     def testParsingDocsReturn(self):
@@ -340,25 +341,25 @@ class DocStringTests(unittest.TestCase):
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
         self.assertTrue(d.docs['in']['return'].startswith('the result'))
-        self.assertTrue(d.docs['in']['rtype'] == 'int')
+        self.assertEqual('int', d.docs['in']['rtype'])
 
     def testParsingGroupsDocsReturn(self):
         doc = mygrpdocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(d.docs['in']['return'] == 'a value in a string')
+        self.assertEqual('a value in a string', d.docs['in']['return'])
 
     def testParsingGoogleDocsReturn(self):
         doc = googledocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(d.docs['in']['return'][0][1] == 'This is a description of what is returned')
+        self.assertEqual('This is a description of what is returned', d.docs['in']['return'][0][1])
 
     def testParsingNumpyDocsReturn(self):
         doc = mynumpydocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
-        self.assertTrue(d.docs['in']['return'][0][1] == 'a value in a string')
+        self.assertEqual('a value in a string', d.docs['in']['return'][0][1])
         d.set_output_style('numpydoc')
 
     def testGeneratingDocsDesc(self):
@@ -366,7 +367,7 @@ class DocStringTests(unittest.TestCase):
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
         d.generate_docs()
-        self.assertTrue(d.docs['out']['desc'] == d.docs['in']['desc'])
+        self.assertEqual(d.docs['in']['desc'], d.docs['out']['desc'])
 
     def testGeneratingDocsReturn(self):
         doc = mydocs
@@ -374,14 +375,14 @@ class DocStringTests(unittest.TestCase):
         d.parse_docs()
         d.generate_docs()
         self.assertTrue(d.docs['out']['return'].startswith('the result'))
-        self.assertTrue(d.docs['out']['rtype'] == 'int')
+        self.assertEqual('int', d.docs['out']['rtype'])
 
     def testGeneratingDocsRaise(self):
         doc = mydocs
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
         d.generate_docs()
-        self.assertTrue(len(d.docs['out']['raises']) == 2)
+        self.assertEqual(2, len(d.docs['out']['raises']))
         self.assertTrue(d.docs['out']['raises'][0][0].startswith('KeyError'))
         self.assertTrue(d.docs['out']['raises'][0][1].startswith('raises a key'))
         self.assertTrue(d.docs['out']['raises'][1][0].startswith('OtherError'))
@@ -392,9 +393,9 @@ class DocStringTests(unittest.TestCase):
         d = docs.DocString(myelem, '    ', doc)
         d.parse_docs()
         d.generate_docs()
-        self.assertTrue(len(d.docs['out']['params']) == 3)
+        self.assertEqual(3, len(d.docs['out']['params']))
         self.assertTrue(type(d.docs['out']['params'][2]) is tuple)
-        self.assertTrue(d.docs['out']['params'][2] == ('third', '', None, '"value"'))
+        self.assertEqual(('third', '', None, '"value"'), d.docs['out']['params'][2])
         # param's description
         self.assertTrue(d.docs['out']['params'][1][1].startswith("the 2"))
 

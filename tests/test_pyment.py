@@ -98,7 +98,7 @@ class DocStringTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(foo))
         with open(foo, "r") as fooo:
             foo_txt = fooo.read()
-        self.assertTrue(foo_txt == "bar")
+        self.assertEqual("bar", foo_txt)
 
 
 def main():

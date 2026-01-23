@@ -10,6 +10,7 @@ absdir = lambda f: os.path.join(current_dir, f)
 
 
 class IssuesTests(unittest.TestCase):
+    maxDiff = None
 
     def testIssue9(self):
         # Title: :rtype: is removed from doc comments; :return: loses indentation
@@ -18,10 +19,10 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         res = p.diff(issue9, "{0}.patch".format(issue9))
-        self.assertTrue(res[8].strip() == "-    :return: smthg")
-        self.assertTrue(res[9].strip() == "+    :returns: smthg")
-        self.assertTrue((res[10][1:].rstrip() == "    :rtype: ret type")
-                        and (res[10][0] == ' '))
+        self.assertEqual("-    :return: smthg", res[8].strip())
+        self.assertEqual("+    :returns: smthg", res[9].strip())
+        self.assertEqual("    :rtype: ret type", res[10][1:].rstrip())
+        self.assertEqual(' ', res[10][0])
 
     def testIssue10(self):
         # Title: created patch-file not correct
@@ -35,7 +36,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == expected)
+        self.assertEqual(expected, result)
 
     def testIssue11(self):
         # Title: doctests incorrectly formatted with reST option
@@ -55,7 +56,7 @@ class IssuesTests(unittest.TestCase):
     """'''
         d = ds.DocString(deftxt, quotes='"""')
         d.parse_docs(txt)
-        self.assertTrue(d.get_raw_docs() == expected)
+        self.assertEqual(expected, d.get_raw_docs())
 
     def testIssue15(self):
         # Title: Does not convert existing docstrings
@@ -69,7 +70,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == expected)
+        self.assertEqual(expected, result)
 
     def testIssue19(self):
         # Title: :raises in reST is incorrectly parsed
@@ -88,7 +89,7 @@ class IssuesTests(unittest.TestCase):
     """'''
         docs = ds.DocString('def test():', quotes='"""')
         docs.parse_docs(txt)
-        self.assertTrue(docs.get_raw_docs() == expected)
+        self.assertEqual(expected, docs.get_raw_docs())
 
     def testIssue22(self):
         # Title: Class __init__() docstrings are not generated
@@ -109,7 +110,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == expected)
+        self.assertEqual(expected, result)
 
     def testIssue30(self):
         # if file starting with a function/class definition, patching the file
@@ -141,7 +142,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == expected)
+        self.assertEqual(expected, result)
 
     @unittest.expectedFailure
     def testIssue34(self):
@@ -152,7 +153,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     def testIssue46(self):
         # Title: list, tuple, dict default param values are not parsed correctly
@@ -171,7 +172,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == expected)
+        self.assertEqual(expected, result)
 
     @unittest.expectedFailure
     def testIssue47(self):
@@ -182,7 +183,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     def testIssue49(self):
         # Title: If already numpydoc format, will remove the Raises section
@@ -193,7 +194,7 @@ class IssuesTests(unittest.TestCase):
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
         print(result)
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     def testIssue51(self):
         # Title:  Raise block convertion
@@ -201,7 +202,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     def testIssue58(self):
         # Title: Comments after def statement not supported
@@ -224,7 +225,7 @@ class IssuesTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == expected)
+        self.assertEqual(expected, result)
 
     def testIssue69(self):
         # Title: Wrong Formatting for Input params with default values

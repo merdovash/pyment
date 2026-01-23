@@ -224,7 +224,12 @@ class AppTests(unittest.TestCase):
             write_to_stdin=None,
             # expected_stderr=re.compile('too few arguments'),
             expected_stderr=re.compile(
-                r'usage: pymentapp.py \[-h\] \[-i style\] \[-o style\] \[-q quotes\] \[-f status\] \[-t\].?.?\s{20}\[-c config\] \[-d\] \[-p status\] \[-v\] \[-w\].?.?\s{20}path.?.?pymentapp\.py: error: the following arguments are required: path',
+                r'usage: pymentapp\.py \[-h\] \[-i style\] \[-o style\] \[-q quotes\] \[-f status\] \[-t\].*?'
+                r'\[-c config\] \[-d\] \[-p status\] \[-v\] \[-w\] \[-s spaces\] \[-e\].*?'
+                r'\[--file-comment\] \[--extensions extensions\].*?'
+                r'\[--encoding encoding\] \[--exclude patterns\].*?'
+                r'path.*?'
+                r'pymentapp\.py: error: the following arguments are required: path',
                 re.DOTALL),
             expected_returncode=2
         )

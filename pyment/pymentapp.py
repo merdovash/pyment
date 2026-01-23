@@ -121,7 +121,8 @@ def get_config(config_file, encoding='utf-8'):
                     if len(line.strip()):
                         key, value = line.split("=", 1)
                         key, value = key.strip(), value.strip()
-                        if key in ['init2class', 'first_line', 'convert_only', 'file_comment']:
+                        if key in ['init2class', 'first_line', 'convert_only', 'file_comment',
+                                   'description_on_new_line']:
                             value = tobool(value)
                         if key == 'indent':
                             value = int(value)
@@ -133,7 +134,7 @@ def get_config(config_file, encoding='utf-8'):
 
 def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
         init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False, file_comment=False, encoding='utf-8'):
+        skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False):
     if input_style == 'auto':
         input_style = None
 
@@ -150,6 +151,8 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
         output_style = config.pop('output_style')
     if 'first_line' in config:
         first_line = config.pop('first_line')
+    if 'description_on_new_line' in config:
+        description_on_new_line = config.pop('description_on_new_line')
     if 'file_comment' in config:
         file_comment = config.pop('file_comment')
     if 'encoding' in config:
@@ -175,6 +178,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                           skip_empty=skip_empty,
                           file_comment=file_comment,
                           encoding=encoding,
+                          description_on_new_line=description_on_new_line,
                           **config)
             c.proceed()
             if init2class:
@@ -247,6 +251,11 @@ def main():
     parser.add_argument('--exclude', metavar='patterns', dest='exclude',
                         default=None,
                         help='Comma-separated list of filename patterns to exclude (supports Unix shell-style wildcards, e.g., "test_*.py,*_test.py"). Patterns match against the filename or full path.')
+    parser.add_argument('--description-on-new-line',
+                        action='store_true',
+                        dest='description_on_new_line',
+                        default=False,
+                        help='Place description text on a new line even for single-line docstrings without parameters.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -286,7 +295,8 @@ def main():
         args.init2class, args.convert, config_file,
         tobool(args.ignore_private), overwrite=args.overwrite,
         spaces=args.spaces, skip_empty=args.skip_empty,
-        file_comment=args.file_comment, encoding=args.encoding)
+        file_comment=args.file_comment, encoding=args.encoding,
+        description_on_new_line=args.description_on_new_line)
 
 
 if __name__ == "__main__":

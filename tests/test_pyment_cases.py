@@ -28,6 +28,7 @@ def remove_diff_header(diff):
 
 
 class FilesConversionTests(unittest.TestCase):
+    maxDiff = None
 
     def testCaseFreeTesting(self):
         # free cases
@@ -35,7 +36,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     def testCaseGenAllParamsReST(self):
         # The file has several functions with no or several parameters,
@@ -45,7 +46,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(remove_diff_header(result) == remove_diff_header(expected))
+        self.assertEqual(remove_diff_header(expected), remove_diff_header(result))
 
     @unittest.expectedFailure
     def testCaseGenAllParamsGoogle(self):
@@ -56,7 +57,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(remove_diff_header(result) == remove_diff_header(expected))
+        self.assertEqual(remove_diff_header(expected), remove_diff_header(result))
 
     def testCaseGenAllParamsNumpydoc(self):
         # The file has several functions with no or several parameters,
@@ -66,7 +67,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(remove_diff_header(result) == remove_diff_header(expected))
+        self.assertEqual(remove_diff_header(expected), remove_diff_header(result))
 
     def testCaseGenAllParamsJavadoc(self):
         # The file has several functions with no or several parameters,
@@ -76,7 +77,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(remove_diff_header(result) == remove_diff_header(expected))
+        self.assertEqual(remove_diff_header(expected), remove_diff_header(result))
 
     def testCaseNoGenDocsAlreadyReST(self):
         # The file has functions with already docstrings in reST format,
@@ -85,7 +86,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     def testCaseNoGenDocsAlreadyJavadoc(self):
         # The file has functions with already docstrings in javadoc format,
@@ -94,7 +95,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     @unittest.expectedFailure
     def testCaseNoGenDocsAlreadyNumpydoc(self):
@@ -104,7 +105,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
     @unittest.expectedFailure
     def testCaseNoGenDocsAlreadyGoogle(self):
@@ -114,7 +115,7 @@ class FilesConversionTests(unittest.TestCase):
         p._parse()
         self.assertTrue(p.parsed)
         result = ''.join(p.diff())
-        self.assertTrue(result == '')
+        self.assertEqual('', result)
 
 
 def main():

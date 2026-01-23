@@ -1293,7 +1293,7 @@ class DocString(object):
 
     def __init__(self, elem_raw, spaces='', docs_raw=None, quotes="'''", input_style=None, output_style=None,
                  first_line=False, trailing_space=True, type_stub=False, before_lim='', num_of_spaces=4,
-                 skip_empty=False, **kwargs):
+                 skip_empty=False, description_on_new_line=False, **kwargs):
         """
         :param elem_raw: raw data of the element (def or class).
         :param spaces: the leading whitespaces before the element
@@ -1317,11 +1317,14 @@ class DocString(object):
         :type num_of_spaces: integer
         :param skip_empty: if set, will skip writing the params, returns, or raises if they are empty
         :type skip_empty: boolean
+        :param description_on_new_line: if True, description will be placed on a new line even for single-line docstrings without parameters. Default is False (text on first line).
+        :type description_on_new_line: boolean
 
         """
         self.dst = DocsTools()
         self.before_lim = before_lim
         self.first_line = first_line
+        self.description_on_new_line = description_on_new_line
         self.trailing_space = ''
         self.type_stub = type_stub
         if trailing_space:
@@ -2182,14 +2185,27 @@ class DocString(object):
         is_auto_generated_name = (self.docs['in']['raw'] is None and 
                                    self.element.get('name') and 
                                    desc == self.element['name'])
-        if not desc or not desc.count('\n'):
-            if not self.docs['out']['params'] and not self.docs['out']['return'] and not self.docs['out']['rtype'] and not self.docs['out']['raises']:
-                # If it's an auto-generated name, put it on a new line
-                if is_auto_generated_name:
+        # Check if we should use single-line format (no params/returns/raises and single-line description)
+        if not self.docs['out']['params'] and not self.docs['out']['return'] and not self.docs['out']['rtype'] and not self.docs['out']['raises']:
+            if not desc or not desc.count('\n'):
+                # Single-line docstring without parameters
+                if self.description_on_new_line or is_auto_generated_name:
+                    # Put description on a new line
                     raw += '\n' + self.docs['out']['spaces'] + desc
+                    raw += self.quotes
                 else:
+                    # Keep it on one line with triple quotes
                     raw += desc if desc else self.trailing_space
-                raw += self.quotes
+                    raw += self.quotes
+                self.docs['out']['raw'] = raw.rstrip()
+                return
+            else:
+                # Multi-line description without parameters: use multi-line format
+                if not self.first_line:
+                    raw += '\n' + self.docs['out']['spaces']
+                raw += with_space(self.docs['out']['desc']).strip() + '\n'
+                if raw.count(self.quotes) == 1:
+                    raw += self.docs['out']['spaces'] + self.quotes
                 self.docs['out']['raw'] = raw.rstrip()
                 return
         # If there are parameters/returns/raises, always put description on a new line
