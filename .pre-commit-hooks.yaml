@@ -1,0 +1,7 @@
+- id: comment
+  name: create comment
+  entry: pyment
+  description: "Create cooments for function, classes and modules"
+  args: []
+  language: python
+  types_or: [python, pyi, jupyter]
