@@ -4,10 +4,10 @@ import re
 from collections import defaultdict
 
 __author__ = "A. Daouzli"
-__copyright__ = "Copyright 2012-2018, A. Daouzli"
+__copyright__ = "Copyright 2012-2018, A. Daouzli; Copyright 2026, V. Schekochihin"
 __licence__ = "GPL3"
-__version__ = "0.3.3"
-__maintainer__ = "A. Daouzli"
+__version__ = "0.5.0"
+__maintainer__ = "V. Schekochihin"
 
 """
 Formats supported at the time:
