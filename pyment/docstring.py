@@ -2190,9 +2190,9 @@ class DocString(object):
             if not desc or not desc.count('\n'):
                 # Single-line docstring without parameters
                 if self.description_on_new_line or is_auto_generated_name:
-                    # Put description on a new line
-                    raw += '\n' + self.docs['out']['spaces'] + desc
-                    raw += self.quotes
+                    # Put description on its own line and close on a new line as well
+                    raw += '\n' + self.docs['out']['spaces'] + (desc if desc else self.trailing_space)
+                    raw += '\n' + self.docs['out']['spaces'] + self.quotes
                 else:
                     # Keep it on one line with triple quotes
                     raw += desc if desc else self.trailing_space
