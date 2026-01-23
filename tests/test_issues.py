@@ -308,6 +308,25 @@ class IssuesTests(unittest.TestCase):
         f.close()
         self.assertEqual(''.join(p.diff()), patch)
 
+    def testIssueTriplequoted(self):
+        # Title: Triple quotes in default parameter values should be converted to single quotes
+        # If a default value contains triple quotes (""" or '''), they should be
+        # converted to single quotes to avoid conflicts with docstring delimiters
+        try:
+            f = open(absdir("issue_triplequoted.py.patch.expected"))
+            expected = f.readlines()
+            if expected[0].startswith("# Patch"):
+                expected = expected[2:]
+            expected = "".join(expected)
+            f.close()
+        except Exception as e:
+            self.fail('Raised exception: "{0}"'.format(e))
+        p = pym.PyComment(absdir('issue_triplequoted.py'))
+        p._parse()
+        self.assertTrue(p.parsed)
+        result = ''.join(p.diff())
+        self.assertEqual(expected, result)
+
 
 def main():
     unittest.main()

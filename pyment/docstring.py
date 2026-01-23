@@ -82,6 +82,44 @@ def get_leading_spaces(data):
     return spaces
 
 
+def normalize_default_value(default_value):
+    """Normalize default value by converting triple quotes to single quotes.
+
+    If the default value contains triple quotes (triple-double-quotes or
+    triple-single-quotes), they are converted to single quotes (').
+    This handles cases where triple quotes appear at the start/end of
+    the string value.
+
+    :param default_value: the default value string to normalize
+    :type default_value: str
+    :return: normalized default value with single quotes instead of triple quotes
+    :rtype: str
+
+    """
+    if not default_value or not isinstance(default_value, str):
+        return default_value
+    
+    # Check if the value starts and ends with triple double quotes
+    if default_value.startswith('"""') and default_value.endswith('"""'):
+        # Extract the content between triple quotes
+        content = default_value[3:-3]
+        # Wrap with single quotes
+        return "'" + content + "'"
+    
+    # Check if the value starts and ends with triple single quotes
+    if default_value.startswith("'''") and default_value.endswith("'''"):
+        # Extract the content between triple quotes
+        content = default_value[3:-3]
+        # Wrap with single quotes
+        return "'" + content + "'"
+    
+    # If triple quotes appear anywhere else in the string, replace them
+    normalized = default_value.replace('"""', "'")
+    normalized = normalized.replace("'''", "'")
+    
+    return normalized
+
+
 class DocToolsBase(object):
     """
 
@@ -1917,6 +1955,9 @@ class DocString(object):
             out_description = ""
             out_type = sig_type if sig_type else None
             out_default = sig_default if sig_default else None
+            # Normalize default value: convert triple quotes to single quotes
+            if out_default:
+                out_default = normalize_default_value(out_default)
             if name in docs_params:
                 out_description = docs_params[name]['description']
                 if not out_type or (not self._options['hint_type_priority'] and docs_params[name]['type']):
