@@ -1,3 +1,8 @@
+0.5.0:
+        - add module docsting (with author from git history)
+        - add option to exclude files
+        - add option to specify file extension
+        
 0.4.0:
         - add support to type hints (PEP 484)
         - stop supporting running Pyment with Python from version 2.7 to 3.5
