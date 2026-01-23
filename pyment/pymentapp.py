@@ -5,6 +5,7 @@ import glob
 import argparse
 import os
 import sys
+import fnmatch
 
 from pyment import PyComment
 from pyment import __version__, __copyright__, __author__, __licence__
@@ -14,7 +15,7 @@ MAX_DEPTH_RECUR = 50
 ''' The maximum depth to reach while recursively exploring sub folders'''
 
 
-def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions=None):
+def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions=None, exclude=None):
     """Retrieve the list of files from a folder.
 
     @param path: file or directory where to search files
@@ -22,6 +23,7 @@ def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions
     @param depth: if explore recursively, the depth of sub directories to follow
     @param file_ext: the files extension to get. Default is '.py' (deprecated, use extensions instead)
     @param extensions: list of file extensions to filter by (e.g., ['.py', '.js']). If None, uses file_ext for backward compatibility.
+    @param exclude: list of filename patterns to exclude (supports Unix shell-style wildcards, e.g., ['test_*.py', '*.test.py']). If None, no files are excluded.
     @return: the file list retrieved. if the input is a file then a one element list.
 
     """
@@ -33,16 +35,28 @@ def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions
     if extensions is None:
         extensions = [file_ext]
     
+    # Initialize exclude list if not provided
+    if exclude is None:
+        exclude = []
+    
     if path[-1] != os.sep:
         path = path + os.sep
     for f in glob.glob(path + "*"):
         if os.path.isdir(f):
             if depth < MAX_DEPTH_RECUR:  # avoid infinite recursive loop
-                file_list.extend(get_files_from_dir(f, recursive, depth + 1, file_ext, extensions))
+                file_list.extend(get_files_from_dir(f, recursive, depth + 1, file_ext, extensions, exclude))
             else:
                 continue
         elif any(f.endswith(ext) for ext in extensions):
-            file_list.append(f)
+            # Check if file should be excluded
+            filename = os.path.basename(f)
+            should_exclude = False
+            for pattern in exclude:
+                if fnmatch.fnmatch(filename, pattern) or fnmatch.fnmatch(f, pattern):
+                    should_exclude = True
+                    break
+            if not should_exclude:
+                file_list.append(f)
     return file_list
 
 
@@ -168,35 +182,13 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
 
             # Print processing actions on the same line
             print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
-            # Print processing actions on the same line
-            print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
 
             if overwrite:
                 list_from, list_to = c.compute_before_after()
                 lines_to_write = list_to
             else:
                 lines_to_write = c.get_patch_lines(path, path)
-            if overwrite:
-                list_from, list_to = c.compute_before_after()
-                lines_to_write = list_to
-            else:
-                lines_to_write = c.get_patch_lines(path, path)
 
-            if f == '-':
-                sys.stdout.writelines(lines_to_write)
-            else:
-                if overwrite:
-                    if list_from != list_to:
-                        c.overwrite_source_file(lines_to_write)
-                else:
-                    c.write_patch_file(os.path.basename(f) + ".patch", lines_to_write)
-        except Exception as e:
-            # Print error message and continue to next file
-            if f != '-':
-                print(f"\nError processing {f}: {str(e)}", file=sys.stderr)
-            else:
-                print(f"\nError processing stdin: {str(e)}", file=sys.stderr)
-            continue
             if f == '-':
                 sys.stdout.writelines(lines_to_write)
             else:
@@ -252,6 +244,9 @@ def main():
                         help='Comma-separated list of file extensions to process (e.g., "py,js"). Extensions can include or omit the leading dot.')
     parser.add_argument('--encoding', metavar='encoding', dest='encoding', default='utf-8',
                         help='The encoding to use when reading and writing files (default "utf-8"). Examples: utf-8, latin1, cp1252.')
+    parser.add_argument('--exclude', metavar='patterns', dest='exclude',
+                        default=None,
+                        help='Comma-separated list of filename patterns to exclude (supports Unix shell-style wildcards, e.g., "test_*.py,*_test.py"). Patterns match against the filename or full path.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -270,7 +265,13 @@ def main():
             elif ext:
                 extensions.append(ext)
 
-    files = get_files_from_dir(source, extensions=extensions)
+    # Parse exclude patterns if provided
+    exclude = None
+    if args.exclude:
+        # Split by comma and strip whitespace
+        exclude = [pattern.strip() for pattern in args.exclude.split(',') if pattern.strip()]
+
+    files = get_files_from_dir(source, extensions=extensions, exclude=exclude)
     if not files:
         msg = BaseException("No files were found matching {0}".format(args.path))
         raise msg

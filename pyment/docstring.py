@@ -2178,13 +2178,21 @@ class DocString(object):
         # sets the description section
         raw = self.docs['out']['spaces'] + self.before_lim + self.quotes
         desc = self.docs['out']['desc'].strip()
+        # Check if description is just the element name (no original docstring)
+        is_auto_generated_name = (self.docs['in']['raw'] is None and 
+                                   self.element.get('name') and 
+                                   desc == self.element['name'])
         if not desc or not desc.count('\n'):
             if not self.docs['out']['params'] and not self.docs['out']['return'] and not self.docs['out']['rtype'] and not self.docs['out']['raises']:
-                raw += desc if desc else self.trailing_space
+                # If it's an auto-generated name, put it on a new line
+                if is_auto_generated_name:
+                    raw += '\n' + self.docs['out']['spaces'] + desc
+                else:
+                    raw += desc if desc else self.trailing_space
                 raw += self.quotes
                 self.docs['out']['raw'] = raw.rstrip()
                 return
-        if not self.first_line:
+        if not self.first_line or is_auto_generated_name:
             raw += '\n' + self.docs['out']['spaces']
         raw += with_space(self.docs['out']['desc']).strip() + '\n'
 
