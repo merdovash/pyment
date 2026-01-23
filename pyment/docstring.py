@@ -2192,7 +2192,10 @@ class DocString(object):
                 raw += self.quotes
                 self.docs['out']['raw'] = raw.rstrip()
                 return
-        if not self.first_line or is_auto_generated_name:
+        # If there are parameters/returns/raises, always put description on a new line
+        has_sections = (self.docs['out']['params'] or self.docs['out']['return'] or 
+                        self.docs['out']['rtype'] or self.docs['out']['raises'])
+        if has_sections or not self.first_line or is_auto_generated_name:
             raw += '\n' + self.docs['out']['spaces']
         raw += with_space(self.docs['out']['desc']).strip() + '\n'
 
