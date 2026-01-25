@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Issue22",
+    "deftype": "class",
+    "input_style": "google",
+    "description": "Test class for issue 22"
+  },
+  {
+    "name": "__init__",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  }
+]

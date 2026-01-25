@@ -1,0 +1,19 @@
+--- a/case.py
++++ b/case.py
+@@ -1,3 +1,15 @@
+ def plot_outlier(inlier, outlier, outlier_rgb = [1, 0, 0]):
+-    """Plot the outlier of ..."""
++    """
++    Plot the outlier of ...
++
++    Args:
++        inlier: 
++        outlier: 
++        outlier_rgb:  (Default value = [1, 0, 0])
++
++    Returns:
++
++    Raises:
++
++    """
+     pass

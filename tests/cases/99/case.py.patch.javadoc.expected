@@ -1,0 +1,35 @@
+--- a/case.py
++++ b/case.py
+@@ -1,22 +1,22 @@
+ def func1(param1):
+-    """Description
++    """
++    Description
+ 
+-    :param param1: 
+-    :type param1: str
+-    :returns: the return value
++    @param param1: 
++    @type param1: str
++    @return: the return value
+ 
+     """
+     pass
+ 
+ 
+ def func2(param1):
+-    """Description
++    """
++    Description
+ 
+-    Args:
+-      param1(str): 
+-
+-    Returns:
+-      the return value
++    @param param1: 
++    @type param1: str
++    @return: the return value
+ 
+     """
+     pass

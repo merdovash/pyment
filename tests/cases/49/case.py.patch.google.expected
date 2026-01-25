@@ -1,0 +1,32 @@
+--- a/case.py
++++ b/case.py
+@@ -1,21 +1,15 @@
+ def func1(param1):
+-    """Function to test issue #49
++    """
++    Function to test issue #49
+ 
+-    Parameters
+-    ----------
+-    param1 : object
+-        Description of param1
++    Args:
++        param1 (object): Description of param1
+ 
+-    Returns
+-    -------
+-    None
+-        Description for return value
++    Returns:
++        None: Description for return value
+ 
+-    Raises
+-    ------
+-    AssertionError
+-        Raises an error if run
++    Raises:
++        AssertionError: Raises an error if run
+ 
+-    
+     """
+     assert False

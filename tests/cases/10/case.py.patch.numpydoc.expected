@@ -1,0 +1,25 @@
+--- a/case.py
++++ b/case.py
+@@ -12,12 +12,18 @@
+ 
+ 
+ def init_test():
+-    '''
++    """
+     Only working when in WinPython root directory.
+ 
+-    Returns:
+-    maske, data0, data1, no_motion, motion
+-    '''
++    Parameters
++    ----------
++
++    Returns
++    -------
++    
++        maske, data0, data1, no_motion, motion
++
++    """
+     maske = read_mask('./MRR/Testdaten/55_mask.bmp')
+     display(maske)
+     data0 = read_dicom_set('./MRR/Testdaten/188_13-12-10_56_1',

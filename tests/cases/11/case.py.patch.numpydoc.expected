@@ -1,0 +1,20 @@
+--- a/case.py
++++ b/case.py
+@@ -1,5 +1,17 @@
+ def meaning(subject, answer=False):
+     """
++    
++
++    Parameters
++    ----------
++    subject :
++        
++    answer :
++         (Default value = False)
++
++    Returns
++    -------
++
+     >>> meaning('life', answer=True)
+     42
+     """

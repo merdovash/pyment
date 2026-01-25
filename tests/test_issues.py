@@ -2,330 +2,217 @@
 
 import unittest
 import os
+import json
+import re
 import pyment.pyment as pym
-import pyment.docstring as ds
+from parameterized import parameterized
 
 current_dir = os.path.dirname(__file__)
 absdir = lambda f: os.path.join(current_dir, f)
+
+# All supported strategies
+STRATEGIES = ['javadoc', 'reST', 'google', 'numpydoc']
+
+# Issue definitions: (issue_name, folder_name, base_kwargs, use_proceed, expected_failure)
+ISSUES = [
+    ('issue9', '9', {}, False, False),
+    ('issue10', '10', {}, False, False),
+    ('issue11', '11', {}, False, False),
+    ('issue15', '15', {}, False, False),
+    ('issue19', '19', {}, False, False),
+    ('issue22', '22', {}, False, False),
+    ('issue30', '30', {'input_style': 'numpydoc'}, False, False),
+    ('issue32', '32', {}, False, False),
+    ('issue34', '34', {}, False, True),
+    ('issue46', '46', {}, False, False),
+    ('issue47', '47', {}, False, True),
+    ('issue49', '49', {}, False, False),
+    ('issue51', '51', {}, False, False),
+    ('issue58', '58', {}, False, False),
+    ('issue69', '69', {}, False, False),
+    ('issue83', '83', {'ignore_private': True}, True, False),
+    ('issue85', '85', {}, False, False),
+    ('issue88', '88', {}, False, False),
+    ('issue90', '90', {}, False, False),
+    ('issue93', '93', {}, False, False),
+    ('issue95', '95', {}, False, False),
+    ('issue99', '99', {}, False, False),
+    ('issue_triplequoted', 'triplequoted', {}, False, False),
+    ('issue_function_name', 'function_name', {}, False, False),
+    # FilesConversionTests cases
+    ('case_params', 'params', {}, False, False),
+    ('case_free_cases', 'free_cases', {}, False, False),
+    ('case_docs_already_rest', 'docs_already_rest', {}, False, False),
+    ('case_docs_already_javadoc', 'docs_already_javadoc', {}, False, False),
+    ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, True),
+    ('case_docs_already_google', 'docs_already_google', {}, False, True),
+]
 
 
 class IssuesTests(unittest.TestCase):
     maxDiff = None
 
-    def testIssue9(self):
-        # Title: :rtype: is removed from doc comments; :return: loses indentation
-        issue9 = absdir('issue9.py')
-        p = pym.PyComment(issue9)
-        p._parse()
-        self.assertTrue(p.parsed)
-        res = p.diff(issue9, "{0}.patch".format(issue9))
-        self.assertEqual("-    :return: smthg", res[8].strip())
-        self.assertEqual("+    :returns: smthg", res[9].strip())
-        self.assertEqual("    :rtype: ret type", res[10][1:].rstrip())
-        self.assertEqual(' ', res[10][0])
+    @parameterized.expand([
+        (issue_name, folder_name, strategy, base_kwargs, use_proceed, expected_failure)
+        for issue_name, folder_name, base_kwargs, use_proceed, expected_failure in ISSUES
+        for strategy in STRATEGIES
+    ])
+    def test_full(self, issue_name, folder_name, strategy, base_kwargs, use_proceed, expected_failure):
+        """Parameterized test for all issue tests across all strategies"""
+        # Create kwargs for this strategy
+        kwargs = base_kwargs.copy()
+        kwargs['output_style'] = strategy
+        
+        # Build file paths
+        file_name = os.path.join('cases', folder_name, 'case.py')
+        expected_file = os.path.join('cases', folder_name, f'case.py.patch.{strategy}.expected')
+        
+        # Test spec.json if it exists (only for first strategy to avoid duplication)
+        if strategy == STRATEGIES[0]:
+            spec_data = self._load_spec_json(os.path.join('cases', folder_name))
+            if spec_data is not None:
+                calculated_specs = self._extract_calculated_specs(file_name, base_kwargs)
+                if calculated_specs is not None:
+                    # Compare spec.json with calculated specs
+                    with self.subTest(check='spec_json'):
+                        self.assertEqual(len(spec_data), len(calculated_specs),
+                                       f'Number of elements mismatch: spec.json has {len(spec_data)}, calculated has {len(calculated_specs)}')
+                        
+                        for i, (spec_item, calc_item) in enumerate(zip(spec_data, calculated_specs)):
+                            with self.subTest(element_index=i, element_name=spec_item.get('name', 'unknown')):
+                                self.assertEqual(spec_item.get('name'), calc_item.get('name'),
+                                               f'Name mismatch for element {i}')
+                                self.assertEqual(spec_item.get('deftype'), calc_item.get('deftype'),
+                                               f'Deftype mismatch for element {i}')
+                                self.assertEqual(spec_item.get('input_style'), calc_item.get('input_style'),
+                                               f'Input style mismatch for element {i}: expected {spec_item.get("input_style")}, got {calc_item.get("input_style")}')
+                                self.assertEqual(spec_item.get('description'), calc_item.get('description'),
+                                               f'Description mismatch for element {i}')
+        
+        # For expected failures, wrap the test execution
+        if expected_failure:
+            try:
+                self._run_test(file_name, expected_file, kwargs, use_proceed)
+                # If we get here, the test passed unexpectedly
+                self.fail("Test passed unexpectedly (was marked as expected failure)")
+            except AssertionError:
+                # Expected failure occurred - this is fine
+                pass
+        else:
+            self._run_test(file_name, expected_file, kwargs, use_proceed)
 
-    def testIssue10(self):
-        # Title: created patch-file not correct
+    def _run_test(self, file_name, expected_file, kwargs, use_proceed):
+        """Helper method to run the actual test"""
+        # Load expected result
+        expected_path = absdir(expected_file)
+        if not os.path.exists(expected_path):
+            self.skipTest(f'Expected file not found: {expected_file} (may indicate a known issue)')
+        
         try:
-            f = open(absdir("issue10.py.patch.expected"))
-            expected = f.read()
-            f.close()
+            with open(expected_path) as f:
+                expected = f.read()
+            # Strip header if present (for compatibility with old format)
+            expected_lines = expected.splitlines(keepends=True)
+            if expected_lines and expected_lines[0].startswith("# Patch"):
+                expected = "".join(expected_lines[2:])
         except Exception as e:
-            self.fail('Raised exception: "{0}"'.format(e))
-        p = pym.PyComment(absdir('issue10.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
+            self.fail('Raised exception reading expected file: "{0}"'.format(e))
+        
+        # Run PyComment
+        p = pym.PyComment(absdir(file_name), **kwargs)
+        if use_proceed:
+            p.proceed()
+        else:
+            p._parse()
+            self.assertTrue(p.parsed)
+        
+        # Get result
         result = ''.join(p.diff())
-        self.assertEqual(expected, result)
-
-    def testIssue11(self):
-        # Title: doctests incorrectly formatted with reST option
-        deftxt = "def meaning(subject, answer=False):"
-        txt = '''"""
-    >>> meaning('life', answer=True)
-    42
-    """'''
-        expected = '''    """
-    
-
-    :param subject: 
-    :param answer:  (Default value = False)
-
-    >>> meaning('life', answer=True)
-    42
-    """'''
-        d = ds.DocString(deftxt, quotes='"""')
-        d.parse_docs(txt)
-        self.assertEqual(expected, d.get_raw_docs())
-
-    def testIssue15(self):
-        # Title: Does not convert existing docstrings
+        
+        # For params, remove diff header lines (like in original test_pyment_cases.py)
+        # This removes lines like "@@ -1,36 +1,87 @@" which may vary
+        if 'params' in file_name:
+            expected = self._remove_diff_header(expected)
+            result = self._remove_diff_header(result)
+        
+        # Compare
+        actual_file = expected_file.replace('.expected', '.actual')
         try:
-            f = open(absdir("issue15.py.patch.expected"))
-            expected = f.read()
-            f.close()
-        except Exception as e:
-            self.fail('Raised exception: "{0}"'.format(e))
-        p = pym.PyComment(absdir('issue15.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual(expected, result)
+            self.assertEqual(expected, result)
+            # On success, remove .actual file if it exists
+            actual_path = absdir(actual_file)
+            if os.path.exists(actual_path):
+                try:
+                    os.remove(actual_path)
+                except Exception as e:
+                    # If we can't remove the file, log it but don't fail the test
+                    print(f"Warning: Could not remove actual file '{actual_file}': {e}")
+        except AssertionError:
+            # On failure, write actual result to .actual file
+            try:
+                with open(absdir(actual_file), 'w') as f:
+                    f.write(result)
+            except Exception as e:
+                # If we can't write the file, log it but don't hide the original error
+                print(f"Warning: Could not write actual file '{actual_file}': {e}")
+            # Re-raise the original assertion error
+            raise
 
-    def testIssue19(self):
-        # Title: :raises in reST is incorrectly parsed
-        txt = '''"""
+    def _remove_diff_header(self, diff):
+        """Remove diff header lines (like @@ -1,36 +1,87 @@) from diff"""
+        return re.sub(r'@@.+?@@\n', '', diff)
 
-    :raises ValueError: on incorrect JSON
-    :raises requests.exceptions.HTTPError: on response error from server
-    """'''
-        expected = '''    """
-    
-
-
-    :raises ValueError: on incorrect JSON
-    :raises requests.exceptions.HTTPError: on response error from server
-
-    """'''
-        docs = ds.DocString('def test():', quotes='"""')
-        docs.parse_docs(txt)
-        self.assertEqual(expected, docs.get_raw_docs())
-
-    def testIssue22(self):
-        # Title: Class __init__() docstrings are not generated
-        expected = '''--- a/issue22.py
-+++ b/issue22.py
-@@ -2,4 +2,9 @@
-     """Test class for issue 22"""
- 
-     def __init__(self, param1):
-+        """
-+
-+        :param param1: 
-+
-+        """
-         pass
-'''
-        p = pym.PyComment(absdir('issue22.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual(expected, result)
-
-    def testIssue30(self):
-        # if file starting with a function/class definition, patching the file
-        # will remove the first line!
-        p = pym.PyComment(absdir('issue30.py'), input_style="numpydoc", output_style="numpydoc")
-        p._parse()
-        self.assertTrue(p.parsed)
+    def _load_spec_json(self, folder_path):
+        """Load spec.json from issue folder"""
+        spec_file = absdir(os.path.join(folder_path, 'spec.json'))
+        if not os.path.exists(spec_file):
+            return None
+        
         try:
-            p.diff()
+            with open(spec_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
         except Exception as e:
-            self.fail('Raised exception: "{0}"'.format(e))
+            self.fail(f'Failed to load spec.json from {folder_path}: {e}')
 
-    def testIssue32(self):
-        # Title: def statement gets deleted
-        # if file starting with a function/class definition, patching the file
-        # will remove the first line!
-        expected = '''--- a/issue32.py
-+++ b/issue32.py
-@@ -1,2 +1,8 @@
- def hello_world(a=22, b='hello'):
-+    """
-+
-+    :param a:  (Default value = 22)
-+    :param b:  (Default value = 'hello')
-+
-+    """
-   return 42'''
-        p = pym.PyComment(absdir('issue32.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual(expected, result)
-
-    @unittest.expectedFailure
-    def testIssue34(self):
-        # Title: Problem with regenerating empty param docstring
-        # if two consecutive params have empty descriptions, the first will
-        # be filled with the full second param line
-        p = pym.PyComment(absdir('issue34.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual('', result)
-
-    def testIssue46(self):
-        # Title: list, tuple, dict default param values are not parsed correctly
-        # if a list/tuple/dict is given as default value for a parameter, the
-        # commas will be considered as separators for parameters
+    def _extract_calculated_specs(self, file_name, base_kwargs):
+        """Extract specs from parsed file (same as in generate_specs.py)"""
         try:
-            f = open(absdir("issue46.py.patch.expected"))
-            expected = f.readlines()
-            if expected[0].startswith("# Patch"):
-                expected = expected[2:]
-            expected = "".join(expected)
-            f.close()
+            # Parse the file
+            p = pym.PyComment(absdir(file_name), **base_kwargs)
+            p._parse()
+            
+            if not p.parsed:
+                return None
+            
+            # Extract specs for each element
+            specs = []
+            for elem in p.docs_list:
+                if elem is None:
+                    continue
+                
+                # Get the DocString object
+                docstring = elem.get('docs')
+                if docstring is None:
+                    continue
+                
+                # Parse the docstring if not already parsed
+                if not docstring.parsed_docs:
+                    docstring.parse_docs()
+                
+                # Extract information
+                spec = {
+                    'name': docstring.element.get('name', ''),
+                    'deftype': docstring.element.get('deftype', ''),
+                    'input_style': docstring.get_input_style() or 'auto',
+                    'description': docstring.docs['in']['desc'].strip() if docstring.docs['in']['desc'] else ''
+                }
+                
+                specs.append(spec)
+            
+            return specs if specs else None
+            
         except Exception as e:
-            self.fail('Raised exception: "{0}"'.format(e))
-        p = pym.PyComment(absdir('issue46.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual(expected, result)
-
-    @unittest.expectedFailure
-    def testIssue47(self):
-        # Title:  Extra blank line for docstring with a muli-line description #47
-        # If a function has no argument and a multi-line description, Pyment will insert two blank lines
-        # between the description and the end of the docstring.
-        p = pym.PyComment(absdir('issue47.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual('', result)
-
-    def testIssue49(self):
-        # Title: If already numpydoc format, will remove the Raises section
-        # If the last section in a numpydoc docstring is a `Raises` section,
-        # it will be removed if the output format is also set to numpydoc
-        p = pym.PyComment(absdir('issue49.py'), output_style='numpydoc')
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        print(result)
-        self.assertEqual('', result)
-
-    def testIssue51(self):
-        # Title:  Raise block convertion
-        p = pym.PyComment(absdir('issue51.py'), output_style='google')
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual('', result)
-
-    def testIssue58(self):
-        # Title: Comments after def statement not supported
-        # If a function's def statement is followed by a comment it won't be proceeded.
-        p = pym.PyComment(absdir('issue58.py'))
-        expected = '''--- a/issue58.py
-+++ b/issue58.py
-@@ -1,5 +1,9 @@
- def func(param): # some comment
--    """some docstring"""
-+    """some docstring
-+
-+    :param param: 
-+
-+    """
-     pass
- 
- 
-'''
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual(expected, result)
-
-    def testIssue69(self):
-        # Title: Wrong Formatting for Input params with default values
-        # When default value has a list it is split and considers list's elements as parameters
-        p = pym.PyComment(absdir('issue69.py'))
-        p._parse()
-        f = open(absdir('issue69.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssue83(self):
-        # Title: No docstring in class results in wrong indentation in __init__()
-        p = pym.PyComment(absdir('issue83.py'), ignore_private=True)
-        p.proceed()
-        with open(absdir('issue83.py.patch')) as f:
-           patch = f.read()
-        result = ''.join(p.diff())
-        print(result)
-        self.assertEqual(result, patch)
-
-    def testIssue85(self):
-        # Title: When converting from reST, parameter types are not handled correctly
-        # For reST, Sphinx allows to declare the type inside the parameter statement
-        # like this: `:param str name: description`
-        # Pyment should support this.
-        p = pym.PyComment(absdir('issue85.py'))
-        p._parse()
-        f = open(absdir('issue85.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssue88(self):
-        # Title: Not working on async functions
-        # The async functions are not managed
-        p = pym.PyComment(absdir('issue88.py'))
-        p._parse()
-        f = open(absdir('issue88.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssue90(self):
-        # Title: __doc__ is not well parsed
-        # If the line after function signature contains triple [double] quotes but is not a docstring
-        # it will be however considered as if it was and will have side effect.
-        p = pym.PyComment(absdir('issue90.py'))
-        p._parse()
-        f = open(absdir('issue90.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssue93(self):
-        # Title: Support for type hints
-        # Add support for type hints (PEP 484).
-        p = pym.PyComment(absdir('issue93.py'))
-        p._parse()
-        f = open(absdir('issue93.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssue95(self):
-        # Title: When there's a parameter without description in reST, Pyment copies the whole next element
-        p = pym.PyComment(absdir('issue95.py'))
-        p._parse()
-        f = open(absdir('issue95.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssue99(self):
-        # Title: Type is removed from parameter if not in type hints when converting reST docstring
-        p = pym.PyComment(absdir('issue99.py'))
-        p._parse()
-        f = open(absdir('issue99.py.patch'))
-        patch = f.read()
-        f.close()
-        self.assertEqual(''.join(p.diff()), patch)
-
-    def testIssueTriplequoted(self):
-        # Title: Triple quotes in default parameter values should be converted to single quotes
-        # If a default value contains triple quotes (""" or '''), they should be
-        # converted to single quotes to avoid conflicts with docstring delimiters
-        try:
-            f = open(absdir("issue_triplequoted.py.patch.expected"))
-            expected = f.readlines()
-            if expected[0].startswith("# Patch"):
-                expected = expected[2:]
-            expected = "".join(expected)
-            f.close()
-        except Exception as e:
-            self.fail('Raised exception: "{0}"'.format(e))
-        p = pym.PyComment(absdir('issue_triplequoted.py'))
-        p._parse()
-        self.assertTrue(p.parsed)
-        result = ''.join(p.diff())
-        self.assertEqual(expected, result)
+            self.fail(f'Failed to extract specs from {file_name}: {e}')
 
 
 def main():

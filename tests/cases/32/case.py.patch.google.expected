@@ -1,0 +1,16 @@
+--- a/case.py
++++ b/case.py
+@@ -1,2 +1,13 @@
+ def hello_world(a=22, b='hello'):
++    """Hello world
++
++    Args:
++        a:  (Default value = 22)
++        b:  (Default value = 'hello')
++
++    Returns:
++
++    Raises:
++
++    """
+   return 42

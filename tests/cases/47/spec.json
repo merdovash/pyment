@@ -1,0 +1,8 @@
+[
+  {
+    "name": "func",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Description\nin two lines"
+  }
+]

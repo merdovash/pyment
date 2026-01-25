@@ -1,0 +1,8 @@
+[
+  {
+    "name": "func1",
+    "deftype": "def",
+    "input_style": "numpydoc",
+    "description": "Function to test issue #49"
+  }
+]

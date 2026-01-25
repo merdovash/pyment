@@ -1,0 +1,20 @@
+[
+  {
+    "name": "func",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": "Description of func with docstring groups style."
+  },
+  {
+    "name": "A",
+    "deftype": "class",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "method",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  }
+]

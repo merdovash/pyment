@@ -1,0 +1,40 @@
+--- a/case.py
++++ b/case.py
+@@ -1,9 +1,10 @@
+ def func(param1=True, param2='default val'):
+-    '''Description of func with docstring groups style.
++    """
++    Description of func with docstring groups style.
+ 
+-    Params:
+-        param1 - descr of param1 that has True for default value.
+-        param2 - descr of param2
++    Args:
++        param1: descr of param1 that has True for default value
++        param2: descr of param2 (Default value = 'default val')
+ 
+     Returns:
+         some value
+@@ -12,9 +13,21 @@
+         keyError: raises key exception
+         TypeError: raises type exception
+ 
+-    '''
++    """
+     pass
+ 
+ class A:
++    """ A """
+     def method(self, param1, param2=None):
++        """Method
++
++        Args:
++            param1: 
++            param2:  (Default value = None)
++
++        Returns:
++
++        Raises:
++
++        """
+         pass

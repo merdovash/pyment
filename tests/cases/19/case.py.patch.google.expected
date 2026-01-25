@@ -1,0 +1,19 @@
+--- a/case.py
++++ b/case.py
+@@ -1,7 +1,14 @@
+ def test():
+     """
++    
+ 
+-    :raises ValueError: on incorrect JSON
+-    :raises requests.exceptions.HTTPError: on response error from server
++    Args:
++
++    Returns:
++
++    Raises:
++        ValueError: on incorrect JSON
++        requests.exceptions.HTTPError: on response error from server
++
+     """
+     pass

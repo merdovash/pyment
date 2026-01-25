@@ -1,0 +1,10 @@
+--- a/issue49.py
++++ b/issue49.py
+@@ -1,5 +1,6 @@
+ def func1(param1):
+-    """Function to test issue #49
++    """
++    Function to test issue #49
+ 
+     Parameters
+     ----------

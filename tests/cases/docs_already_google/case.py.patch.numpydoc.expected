@@ -1,0 +1,53 @@
+--- a/case.py
++++ b/case.py
+@@ -1,29 +1,38 @@
+ def func1(param1):
+-    """Function 1
++    """
++    Function 1
+     with 1 param
+ 
+-    Args:
+-        param1 (type): 1st parameter
++    Parameters
++    ----------
++    param1 :
++        type
+ 
+-    Returns:
++    Returns
++    -------
++    type
+         None
+-
+-    Raises:
+-        Exception: an exception
++        
++        Raises:
+ 
+     """
+     return None
+ 
+ 
+ def func2(param1, param2):
+-    """Function 2
++    """
++    Function 2
+     with 2 params
+ 
+-    Args:
+-        param1 (type): 1st parameter
+-        param2: 2nd parameter
++    Parameters
++    ----------
++    param1 : type
++        1st parameter
++    param2 :
++        2nd parameter
+ 
+-    Returns:
++    Returns
++    -------
+ 
+     """
+     pass

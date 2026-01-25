@@ -1,0 +1,15 @@
+--- a/case.py
++++ b/case.py
+@@ -1,8 +1,11 @@
+ def func(p):
+     """
++    
++
+     :param p: blabla
+     :type p: ptype
+-    :return: smthg
++    :returns: smthg
+     :rtype: ret type
++
+     """
+     pass

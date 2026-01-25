@@ -1,0 +1,14 @@
+--- a/case.py
++++ b/case.py
+@@ -1,9 +1,11 @@
+ class Foo:
++    """ Foo """
+     def __init__(self):
+         """Some init docstring"""
+         pass
+ 
+ class Bar:
++    """ Bar """
+     def __repr__(self):
+         """Some repr docstring"""
+         return 'Foo()'

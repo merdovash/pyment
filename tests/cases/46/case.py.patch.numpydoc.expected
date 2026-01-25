@@ -1,0 +1,47 @@
+--- a/case.py
++++ b/case.py
+@@ -1,11 +1,44 @@
+ def func1(param1=[1, None, "hehe"]):
++    """Func1
++
++    Parameters
++    ----------
++    param1 :
++         (Default value = [1, None, "hehe"])
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func2(param1=(1, None, "hehe")):
++    """Func2
++
++    Parameters
++    ----------
++    param1 :
++         (Default value = (1, None, "hehe"))
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func3(param1={0: 1, "a": None}):
++    """Func3
++
++    Parameters
++    ----------
++    param1 :
++         (Default value = {0: 1, "a": None})
++
++    Returns
++    -------
++
++    """
+     pass
+ 

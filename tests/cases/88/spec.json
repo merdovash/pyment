@@ -1,0 +1,26 @@
+[
+  {
+    "name": "std_func",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "async_func",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "async_func2",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "async_func3",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": "some comment"
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "plot_outlier",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Plot the outlier of ..."
+  }
+]

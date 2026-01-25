@@ -1,0 +1,10 @@
+--- a/case.py
++++ b/case.py
+@@ -1,7 +1,6 @@
+ def func():
+     """Description
+     in two lines
+-
+     """
+     pass
+ 

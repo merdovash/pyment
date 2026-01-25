@@ -1,0 +1,26 @@
+[
+  {
+    "name": "calculate_total_sum",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "process_user_data",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "UserAccountManager",
+    "deftype": "class",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "__init__",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  }
+]

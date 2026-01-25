@@ -1,0 +1,38 @@
+[
+  {
+    "name": "func",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": ""
+  },
+  {
+    "name": "func2",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": ""
+  },
+  {
+    "name": "func3",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": ""
+  },
+  {
+    "name": "func4",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": ""
+  },
+  {
+    "name": "func5",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": ""
+  },
+  {
+    "name": "func6",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": ""
+  }
+]

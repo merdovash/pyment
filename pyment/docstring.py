@@ -1326,6 +1326,422 @@ class DocsTools(object):
         return start, end
 
 
+class CommentBuilderConfig(object):
+    """Configuration class for building docstring comments.
+    
+    This class encapsulates all configuration options needed to build
+    docstrings, making the API cleaner and more maintainable.
+    """
+    
+    __slots__ = (
+        'docs_tools', 'spaces', 'quotes', 'before_lim', 'num_of_spaces',
+        'skip_empty', 'first_line', 'trailing_space', 'description_on_new_line'
+    )
+    
+    def __init__(self, docs_tools, spaces='', quotes="'''", before_lim='', 
+                 num_of_spaces=4, skip_empty=False, first_line=False, 
+                 trailing_space='', description_on_new_line=False):
+        """Initialize the configuration.
+        
+        :param docs_tools: DocsTools instance for style management
+        :param spaces: leading whitespaces before the element
+        :param quotes: type of quotes to use (' ' ' or " " ")
+        :param before_lim: prefix for docstring (e.g., 'r' for r'''...)
+        :param num_of_spaces: number of spaces for indentation
+        :param skip_empty: skip empty sections if True
+        :param first_line: description starts on first line if True
+        :param trailing_space: trailing space to insert
+        :param description_on_new_line: put description on new line if True
+        """
+        self.docs_tools = docs_tools
+        self.spaces = spaces
+        self.quotes = quotes
+        self.before_lim = before_lim
+        self.num_of_spaces = num_of_spaces
+        self.skip_empty = skip_empty
+        self.first_line = first_line
+        self.trailing_space = trailing_space
+        self.description_on_new_line = description_on_new_line
+
+
+class CommentBuilder(object):
+    """Base class for building docstring comments.
+    
+    This class provides common functionality for building docstrings
+    in various formats (javadoc, reST, google, numpydoc, etc.).
+    """
+    
+    __slots__ = (
+        'config', 'strategy', 'description', 'params', 'return_desc', 'return_type', 'raises',
+        'post', 'doctests', 'element_name', 'input_raw',
+        'is_auto_generated_name', 'has_existing_description'
+    )
+    
+    def __init__(self, config, strategy):
+        """Initialize the builder with configuration and strategy.
+        
+        :param config: CommentBuilderConfig instance containing all configuration
+        :param strategy: CommentFormatStrategy instance for formatting
+        """
+        self.config = config
+        self.strategy = strategy
+        
+        # Data to build (set by setters)
+        self.description = ''
+        self.params = []
+        self.return_desc = None
+        self.return_type = None
+        self.raises = []
+        self.post = ''
+        self.doctests = ''
+        self.element_name = None
+        self.input_raw = None
+        self.is_auto_generated_name = False
+        self.has_existing_description = False
+        
+    def set_name(self, name):
+        """Set the element name. Description is set to the name as-is.
+        
+        :param name: the element name
+        :return: self for method chaining
+        """
+        self.element_name = name
+        self.description = name if name else ''
+        return self
+        
+    def set_description(self, desc, has_existing=False):
+        """Set the description text directly.
+        
+        :param desc: description text
+        :param has_existing: whether this description came from an existing docstring
+        :return: self for method chaining
+        """
+        self.description = desc
+        self.has_existing_description = has_existing
+        return self
+        
+    def set_params(self, params):
+        """Set the parameters list. Each param is (name, desc, type, default).
+        
+        :param params: list of parameter tuples
+        :return: self for method chaining
+        """
+        self.params = params
+        return self
+        
+    def set_return(self, return_desc, return_type=None):
+        """Set the return description and type.
+        
+        :param return_desc: return description
+        :param return_type: return type (optional)
+        :return: self for method chaining
+        """
+        self.return_desc = return_desc
+        self.return_type = return_type
+        return self
+        
+    def set_raises(self, raises):
+        """Set the raises list. Each raise is (name, desc).
+        
+        :param raises: list of raise tuples
+        :return: self for method chaining
+        """
+        self.raises = raises
+        return self
+        
+    def set_post(self, post):
+        """Set the post section content.
+        
+        :param post: post section content
+        :return: self for method chaining
+        """
+        self.post = post
+        return self
+        
+    def set_doctests(self, doctests):
+        """Set the doctests content.
+        
+        :param doctests: doctests content
+        :return: self for method chaining
+        """
+        self.doctests = doctests
+        return self
+        
+    def set_element_info(self, name, input_raw=None, is_auto_generated=False):
+        """Set element information.
+        
+        :param name: element name
+        :param input_raw: raw input docstring (optional)
+        :param is_auto_generated: whether name is auto-generated (optional)
+        :return: self for method chaining
+        """
+        self.element_name = name
+        self.input_raw = input_raw
+        self.is_auto_generated_name = is_auto_generated
+        return self
+        
+    def _build_params_section(self, sep):
+        """Build the parameters section.
+        
+        :param sep: separator for current style (kept for compatibility, may be unused)
+        :return: formatted parameters section
+        """
+        return self.strategy.format_params_section(self.params)
+        
+    def _build_return_section(self, sep):
+        """Build the return section.
+        
+        :param sep: separator for current style (kept for compatibility, may be unused)
+        :return: formatted return section
+        """
+        return self.strategy.format_return_section(
+            self.return_desc,
+            self.return_type,
+            self.params
+        )
+        
+    def _build_raises_section(self, sep):
+        """Build the raises section.
+        
+        :param sep: separator for current style (kept for compatibility, may be unused)
+        :return: formatted raises section
+        """
+        return self.strategy.format_raises_section(
+            self.raises,
+            self.params,
+            self.return_desc
+        )
+    
+    def _should_use_one_line_format_with_spaces(self):
+        """Determine if auto-generated docstrings should use one-line format with spaces.
+        
+        This method can be overridden in subclasses to provide element-specific behavior.
+        By default, returns False (standard formatting).
+        
+        :return: True if one-line format with spaces should be used, False otherwise
+        """
+        return False
+        
+    def build(self):
+        """Build and return the complete docstring.
+        
+        :return: complete docstring string
+        """
+        sep = self.config.docs_tools.get_sep(target='out')
+        sep = sep + ' ' if sep != ' ' else sep
+        with_space = lambda s: '\n'.join([self.config.spaces + l if i > 0 else l for i, l in enumerate(s.splitlines())])
+
+        # sets the description section
+        raw = self.config.spaces + self.config.before_lim + self.config.quotes
+        desc = self.description.strip()
+        
+        # Check if we should use single-line format
+        has_sections = (self.params or self.return_desc or self.return_type or self.raises)
+        if not has_sections:
+            # Single-line docstring without parameters
+            # Preserve existing description formatting - don't collapse multi-line descriptions
+            if desc and desc.count('\n') and not self.has_existing_description:
+                desc = ' '.join(desc.split())
+            if not desc or not desc.count('\n'):
+                # Single-line docstring without parameters
+                if self.config.description_on_new_line:
+                    # Put description on its own line and close on a new line as well
+                    raw += '\n' + self.config.spaces + (desc if desc else self.config.trailing_space)
+                    raw += '\n' + self.config.spaces + self.config.quotes
+                elif self.is_auto_generated_name and self._should_use_one_line_format_with_spaces():
+                    # For classes with only class name, always use one-line format with spaces
+                    raw += ' ' + desc + ' ' + self.config.quotes
+                elif self.is_auto_generated_name and self.config.first_line:
+                    # For auto-generated descriptions with first_line=True, put description on same line
+                    raw += desc if desc else self.config.trailing_space
+                    if self.element_name == '__init__':
+                        raw += '\n\n' + self.config.spaces + self.config.quotes
+                    else:
+                        raw += '\n' + self.config.spaces + self.config.quotes
+                else:
+                    # Keep it on one line with triple quotes
+                    raw += desc if desc else self.config.trailing_space
+                    raw += self.config.quotes
+                return raw.rstrip()
+            else:
+                # Multi-line description without parameters: use multi-line format
+                if not self.config.first_line:
+                    raw += '\n' + self.config.spaces
+                # Preserve original formatting if description came from existing docstring
+                if self.has_existing_description:
+                    raw += with_space(self.description).rstrip() + '\n'
+                else:
+                    raw += with_space(self.description).strip() + '\n'
+                if raw.count(self.config.quotes) == 1:
+                    raw += self.config.spaces + self.config.quotes
+                return raw.rstrip()
+        
+        # If there are parameters/returns/raises, always put description on a new line
+        # EXCEPT when first_line=True and description is auto-generated - then put it on same line
+        if has_sections:
+            # When there are sections, put description on same line if first_line=True and auto-generated
+            if self.config.first_line and self.is_auto_generated_name:
+                raw += desc + '\n'
+            else:
+                raw += '\n' + self.config.spaces
+                # Preserve original formatting if description came from existing docstring
+                if self.has_existing_description:
+                    # Preserve original line breaks and formatting
+                    raw += with_space(self.description).rstrip() + '\n'
+                else:
+                    raw += with_space(self.description).strip() + '\n'
+        elif not self.config.first_line or self.is_auto_generated_name:
+            raw += '\n' + self.config.spaces
+            raw += with_space(self.description).strip() + '\n'
+        else:
+            raw += with_space(self.description).strip() + '\n'
+
+        # sets the parameters section
+        raw += self._build_params_section(sep)
+
+        # sets the return section
+        raw += self._build_return_section(sep)
+
+        # sets the raises section
+        raw += self._build_raises_section(sep)
+
+        # sets post specific if any
+        if self.post:
+            raw += self.config.spaces + with_space(self.post).strip() + '\n'
+
+        # sets the doctests if any
+        if self.doctests:
+            raw += self.config.spaces + with_space(self.doctests).strip() + '\n'
+
+        if raw.count(self.config.quotes) == 1:
+            raw += self.config.spaces + self.config.quotes
+        return raw.rstrip()
+
+
+class FunctionCommentBuilder(CommentBuilder):
+    """Builder for function docstrings."""
+    
+    __slots__ = ()  # Inherits all slots from CommentBuilder
+    
+    def __init__(self, config, strategy):
+        """Initialize function comment builder.
+        
+        :param config: CommentBuilderConfig instance
+        :param strategy: CommentFormatStrategy instance
+        """
+        super(FunctionCommentBuilder, self).__init__(config, strategy)
+    
+    def _format_name_as_description(self, name):
+        """Format function name as a description by splitting into words and capitalizing first word.
+        
+        Examples:
+        - hello_world -> "Hello world"
+        - calculate_total_sum -> "Calculate total sum"
+        - UserAccountManager -> "User account manager"
+        - __init__ -> "Initialize"
+        - func1 -> "Func1"
+        
+        :param name: the function name
+        :type name: str
+        :return: formatted description
+        :rtype: str
+        """
+        if not name:
+            return ''
+        
+        # Handle special methods like __init__, __str__, etc.
+        if name.startswith('__') and name.endswith('__'):
+            # Remove leading and trailing underscores
+            inner = name[2:-2]
+            if inner:
+                # For __init__, return "Initialize", for others capitalize first letter
+                if inner == 'init':
+                    return 'Initialize'
+                # Capitalize first letter
+                return inner[0].upper() + inner[1:].lower()
+            return name
+        
+        # Split on underscores first
+        parts = name.split('_')
+        
+        # For each part, split on camelCase boundaries
+        words = []
+        for part in parts:
+            if not part:
+                continue
+            
+            # Split camelCase: insert space before each capital letter (except the first)
+            camel_parts = []
+            current_word = ''
+            for i, char in enumerate(part):
+                if char.isupper() and i > 0 and current_word:
+                    # Start a new word
+                    camel_parts.append(current_word)
+                    current_word = char
+                else:
+                    current_word += char
+            if current_word:
+                camel_parts.append(current_word)
+            
+            words.extend(camel_parts)
+        
+        if not words:
+            return name
+        
+        # Join words with spaces and capitalize first word
+        result = ' '.join(words)
+        # Capitalize first letter only
+        return result[0].upper() + result[1:].lower() if len(result) > 1 else result.upper()
+    
+    def set_name(self, name):
+        """Set the function name and generate description from it.
+        
+        :param name: the function name
+        :return: self for method chaining
+        """
+        self.element_name = name
+        if name:
+            self.description = self._format_name_as_description(name)
+        else:
+            self.description = ''
+        return self
+
+
+class ClassCommentBuilder(CommentBuilder):
+    """Builder for class docstrings."""
+    
+    __slots__ = ()  # Inherits all slots from CommentBuilder
+    
+    def __init__(self, config, strategy):
+        """Initialize class comment builder.
+        
+        :param config: CommentBuilderConfig instance
+        :param strategy: CommentFormatStrategy instance
+        """
+        super(ClassCommentBuilder, self).__init__(config, strategy)
+    
+    def _should_use_one_line_format_with_spaces(self):
+        """For classes, use one-line format with spaces for auto-generated docstrings.
+        
+        :return: True for classes
+        """
+        return True
+
+
+class ModuleCommentBuilder(CommentBuilder):
+    """Builder for module docstrings."""
+    
+    __slots__ = ()  # Inherits all slots from CommentBuilder
+    
+    def __init__(self, config, strategy):
+        """Initialize module comment builder.
+        
+        :param config: CommentBuilderConfig instance
+        :param strategy: CommentFormatStrategy instance
+        """
+        super(ModuleCommentBuilder, self).__init__(config, strategy)
+
+
 class DocString(object):
     """This class represents the docstring"""
 
@@ -1427,6 +1843,19 @@ class DocString(object):
         self.quotes = quotes
         self.num_of_spaces = num_of_spaces
         self.skip_empty = skip_empty
+        
+        # Create builder config once - will be reused for all builders
+        self.builder_config = CommentBuilderConfig(
+            self.dst,
+            spaces=self.docs['out']['spaces'],
+            quotes=self.quotes,
+            before_lim=self.before_lim,
+            num_of_spaces=self.num_of_spaces,
+            skip_empty=self.skip_empty,
+            first_line=self.first_line,
+            trailing_space=self.trailing_space,
+            description_on_new_line=self.description_on_new_line
+        )
 
     def __str__(self):
         # for debugging
@@ -1931,6 +2360,7 @@ class DocString(object):
             self.docs['out']['desc'] = self.docs['in']['desc']
         else:
             # If no docstring exists, use the function or class name as the description
+            # The builder will format it appropriately for functions
             if self.element.get('name'):
                 self.docs['out']['desc'] = self.element['name']
             else:
@@ -2004,278 +2434,65 @@ class DocString(object):
             elif 'post' not in self.docs['out'] or self.docs['out']['post'] is None:
                 self.docs['out']['post'] = ''
 
-    def _set_raw_params(self, sep):
-        """Set the output raw parameters section
-
-        :param sep: the separator of current style
-
+    def _create_builder(self):
+        """Create and configure the appropriate builder based on element type.
+        
+        :return: configured CommentBuilder instance
         """
-        raw = '\n'
-        if self.skip_empty and not self.docs['out']['params']:
-            return raw
-        if self.dst.style['out'] == 'numpydoc':
-            spaces = ' ' * self.num_of_spaces
-            with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + spaces +\
-                                                    l.lstrip() if i > 0 else\
-                                                    l for i, l in enumerate(s.splitlines())])
-            raw += self.dst.numpydoc.get_key_section_header('param', self.docs['out']['spaces'])
-            for p in self.docs['out']['params']:
-                raw += self.docs['out']['spaces'] + p[0] + ' :'
-                if p[2] is not None and len(p[2]) > 0:
-                    raw += ' ' + p[2]
-                raw += '\n'
-                raw += self.docs['out']['spaces'] + spaces + with_space(p[1]).strip()
-                if len(p) > 2:
-                    if 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
-                        raw += ' (Default value = ' + str(p[3]) + ')'
-                raw += '\n'
-        elif self.dst.style['out'] == 'google':
-            spaces = ' ' * self.num_of_spaces
-            with_space = lambda s: '\n'.join([self.docs['out']['spaces'] +\
-                                                    l.lstrip() if i > 0 else\
-                                                    l for i, l in enumerate(s.splitlines())])
-            raw += self.dst.googledoc.get_key_section_header('param', self.docs['out']['spaces'])
-            for p in self.docs['out']['params']:
-                raw += self.docs['out']['spaces'] + spaces + p[0]
-                if p[2] is not None and len(p[2]) > 0:
-                    raw += ' (' + p[2]
-                    if len(p) > 3 and p[3] is not None:
-                        raw += ', optional'
-                    raw += ')'
-                raw += ': ' + with_space(p[1]).strip()
-                if len(p) > 2:
-                    if 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
-                        raw += ' (Default value = ' + str(p[3]) + ')'
-                raw += '\n'
-        elif self.dst.style['out'] == 'groups':
-            pass
+        # Determine element type
+        element_type = self.element.get('deftype', 'def')
+        
+        # Update config properties that might have changed
+        self.builder_config.spaces = self.docs['out']['spaces']
+        self.builder_config.first_line = self.first_line
+        
+        # Create strategy based on output style
+        from .comment_builder.strategy import create_strategy
+        style_name = self.dst.style.get('out', 'reST')
+        strategy = create_strategy(style_name, self.builder_config)
+        
+        # Create appropriate builder using the stored config and strategy
+        if element_type == 'class':
+            builder = ClassCommentBuilder(self.builder_config, strategy)
+        elif element_type == 'module':
+            builder = ModuleCommentBuilder(self.builder_config, strategy)
+        else:  # 'def' or default
+            builder = FunctionCommentBuilder(self.builder_config, strategy)
+        
+        # Set data in builder
+        desc = self.docs['out']['desc'].strip()
+        element_name = self.element.get('name')
+        # Check if description was auto-generated (no input docstring and desc equals element name)
+        is_auto_generated_name = (self.docs['in']['raw'] is None and 
+                                   element_name and 
+                                   desc == element_name)
+        
+        # Check if description came from existing docstring
+        has_existing_description = bool(self.docs['in']['desc'] and self.docs['in']['desc'].strip())
+        
+        # Use set_name only for functions (which formats the name), otherwise use set_description
+        if element_type == 'def' and is_auto_generated_name and element_name:
+            builder.set_name(element_name)
         else:
-            with_space = lambda s: '\n'.join(
-                [self.docs['out']['spaces'] + l if i > 0 else l for i, l in enumerate(s.splitlines())]
-            )
-            if len(self.docs['out']['params']):
-                for p in self.docs['out']['params']:
-                    raw += self.docs['out']['spaces'] + self.dst.get_key('param', 'out') + ' ' + p[0] + sep + with_space(p[1]).strip()
-                    if len(p) > 2:
-                        if 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
-                            raw += ' (Default value = ' + str(p[3]) + ')'
-                        if p[2] is not None and len(p[2]) > 0:
-                            raw += '\n'
-                            raw += self.docs['out']['spaces'] + self.dst.get_key('type', 'out') + ' ' + p[0] + sep + p[2]
-                    if self.type_stub and (len(p) <= 2 or p[2] is None or len(p[2]) == 0):
-                        raw += '\n'
-                        raw += self.docs['out']['spaces'] + self.dst.get_key('type', 'out') + ' ' + p[0] + sep
-                    raw += '\n'
-        return raw
-
-    def _set_raw_raise(self, sep):
-        """Set the output raw exception section
-
-        :param sep: the separator of current style
-
-        """
-        raw = ''
-        if self.skip_empty and not self.docs['out']['raises']:
-            return raw
-        if self.dst.style['out'] == 'numpydoc':
-            if 'raise' not in self.dst.numpydoc.get_excluded_sections():
-                raw += '\n'
-                if 'raise' in self.dst.numpydoc.get_mandatory_sections() or \
-                        (self.docs['out']['raises'] and 'raise' in self.dst.numpydoc.get_optional_sections()):
-                    spaces = ' ' * self.num_of_spaces
-                    with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + spaces + l.lstrip() if i > 0 else l for i, l in enumerate(s.splitlines())])
-                    raw += self.dst.numpydoc.get_key_section_header('raise', self.docs['out']['spaces'])
-                    if len(self.docs['out']['raises']):
-                        for p in self.docs['out']['raises']:
-                            raw += self.docs['out']['spaces'] + p[0] + '\n'
-                            raw += self.docs['out']['spaces'] + spaces + with_space(p[1]).strip() + '\n'
-                    raw += '\n'
-        elif self.dst.style['out'] == 'google':
-            if 'raise' not in self.dst.googledoc.get_excluded_sections():
-                raw += '\n'
-                if 'raise' in self.dst.googledoc.get_mandatory_sections() or \
-                        (self.docs['out']['raises'] and 'raise' in self.dst.googledoc.get_optional_sections()):
-                    spaces = ' ' * self.num_of_spaces
-                    with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + spaces + \
-                                                            l.lstrip() if i > 0 else \
-                                                            l for i, l in enumerate(s.splitlines())])
-                    raw += self.dst.googledoc.get_key_section_header('raise', self.docs['out']['spaces'])
-                    if len(self.docs['out']['raises']):
-                        for p in self.docs['out']['raises']:
-                            raw += self.docs['out']['spaces'] + spaces
-                            if p[0] is not None:
-                                raw += p[0] + ':' + sep
-                            if p[1]:
-                                raw += p[1].strip()
-                            raw += '\n'
-                    raw += '\n'
-        elif self.dst.style['out'] == 'groups':
-            pass
-        else:
-            with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + l if i > 0 else l for i, l in enumerate(s.splitlines())])
-            if len(self.docs['out']['raises']):
-                if not self.docs['out']['params'] and not self.docs['out']['return']:
-                    raw += '\n'
-                for p in self.docs['out']['raises']:
-                    raw += self.docs['out']['spaces'] + self.dst.get_key('raise', 'out') + ' '
-                    if p[0] is not None:
-                        raw += p[0] + sep
-                    if p[1]:
-                        raw += with_space(p[1]).strip()
-                    raw += '\n'
-            raw += '\n'
-        return raw
-
-    def _set_raw_return(self, sep):
-        """Set the output raw return section
-
-        :param sep: the separator of current style
-
-        """
-        raw = ''
-        if self.skip_empty and not self.docs['out']['return']:
-            return raw
-        if self.dst.style['out'] == 'numpydoc':
-            raw += '\n'
-            spaces = ' ' * self.num_of_spaces
-            with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + spaces + l.lstrip() if i > 0 else l for i, l in enumerate(s.splitlines())])
-            raw += self.dst.numpydoc.get_key_section_header('return', self.docs['out']['spaces'])
-            if self.docs['out']['rtype']:
-                rtype = self.docs['out']['rtype']
-            else:
-                rtype = 'type'
-            # case of several returns
-            if type(self.docs['out']['return']) is list:
-                for ret_elem in self.docs['out']['return']:
-                    # if tuple (name, desc, rtype) else string desc
-                    if type(ret_elem) is tuple and len(ret_elem) == 3:
-                        rtype = ret_elem[2]
-                        if rtype is None:
-                            rtype = ''
-                        raw += self.docs['out']['spaces']
-                        if ret_elem[0]:
-                            raw += ret_elem[0] + ' : '
-                        raw += rtype + '\n' + self.docs['out']['spaces'] + spaces + with_space(ret_elem[1]).strip() + '\n'
-                    else:
-                        # There can be a problem
-                        raw += self.docs['out']['spaces'] + rtype + '\n'
-                        raw += self.docs['out']['spaces'] + spaces + with_space(str(ret_elem)).strip() + '\n'
-            # case of a unique return
-            elif self.docs['out']['return'] is not None:
-                raw += self.docs['out']['spaces'] + rtype
-                raw += '\n' + self.docs['out']['spaces'] + spaces + with_space(self.docs['out']['return']).strip() + '\n'
-        elif self.dst.style['out'] == 'google':
-            raw += '\n'
-            spaces = ' ' * self.num_of_spaces
-            with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + spaces +\
-                                                    l.lstrip() if i > 0 else\
-                                                    l for i, l in enumerate(s.splitlines())])
-            raw += self.dst.googledoc.get_key_section_header('return', self.docs['out']['spaces'])
-            if self.docs['out']['rtype']:
-                rtype = self.docs['out']['rtype']
-            else:
-                rtype = None
-            # case of several returns
-            if type(self.docs['out']['return']) is list:
-                for ret_elem in self.docs['out']['return']:
-                    # if tuple (name=None, desc, rtype) else string desc
-                    if type(ret_elem) is tuple and len(ret_elem) == 3:
-                        rtype = ret_elem[2]
-                        if rtype is None:
-                            rtype = ''
-                        raw += self.docs['out']['spaces'] + spaces
-                        raw += rtype + ': ' + with_space(ret_elem[1]).strip() + '\n'
-                    else:
-                        # There can be a problem
-                        if rtype:
-                            raw += self.docs['out']['spaces'] + spaces + rtype + ': '
-                            raw += with_space(str(ret_elem)).strip() + '\n'
-                        else:
-                            raw += self.docs['out']['spaces'] + spaces + with_space(str(ret_elem)).strip() + '\n'
-            # case of a unique return
-            elif self.docs['out']['return'] is not None:
-                if rtype:
-                    raw += self.docs['out']['spaces'] + spaces + rtype + ': '
-                    raw += with_space(self.docs['out']['return']).strip() + '\n'
-                else:
-                    raw += self.docs['out']['spaces'] + spaces + with_space(self.docs['out']['return']).strip() + '\n'
-        elif self.dst.style['out'] == 'groups':
-            pass
-        else:
-            with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + l if i > 0 else l for i, l in enumerate(s.splitlines())])
-            if self.docs['out']['return']:
-                if not self.docs['out']['params']:
-                    raw += '\n'
-                raw += self.docs['out']['spaces'] + self.dst.get_key('return', 'out') + sep + with_space(self.docs['out']['return'].rstrip()).strip() + '\n'
-            if self.docs['out']['rtype']:
-                if not self.docs['out']['params']:
-                    raw += '\n'
-                raw += self.docs['out']['spaces'] + self.dst.get_key('rtype', 'out') + sep + self.docs['out']['rtype'].rstrip() + '\n'
-        return raw
-
+            builder.set_description(desc, has_existing=has_existing_description)
+        
+        builder.set_params(self.docs['out']['params'])
+        builder.set_return(self.docs['out']['return'], self.docs['out']['rtype'])
+        builder.set_raises(self.docs['out']['raises'])
+        builder.set_post(self.docs['out'].get('post', ''))
+        builder.set_doctests(self.docs['out'].get('doctests', ''))
+        builder.set_element_info(
+            element_name,
+            self.docs['in']['raw'],
+            is_auto_generated_name
+        )
+        
+        return builder
+    
     def _set_raw(self):
         """Sets the output raw docstring"""
-        sep = self.dst.get_sep(target='out')
-        sep = sep + ' ' if sep != ' ' else sep
-        with_space = lambda s: '\n'.join([self.docs['out']['spaces'] + l if i > 0 else l for i, l in enumerate(s.splitlines())])
-
-        # sets the description section
-        raw = self.docs['out']['spaces'] + self.before_lim + self.quotes
-        desc = self.docs['out']['desc'].strip()
-        # Check if description is just the element name (no original docstring)
-        is_auto_generated_name = (self.docs['in']['raw'] is None and 
-                                   self.element.get('name') and 
-                                   desc == self.element['name'])
-        # Check if we should use single-line format (no params/returns/raises and single-line description)
-        if not self.docs['out']['params'] and not self.docs['out']['return'] and not self.docs['out']['rtype'] and not self.docs['out']['raises']:
-            if not desc or not desc.count('\n'):
-                # Single-line docstring without parameters
-                if self.description_on_new_line or is_auto_generated_name:
-                    # Put description on its own line and close on a new line as well
-                    raw += '\n' + self.docs['out']['spaces'] + (desc if desc else self.trailing_space)
-                    raw += '\n' + self.docs['out']['spaces'] + self.quotes
-                else:
-                    # Keep it on one line with triple quotes
-                    raw += desc if desc else self.trailing_space
-                    raw += self.quotes
-                self.docs['out']['raw'] = raw.rstrip()
-                return
-            else:
-                # Multi-line description without parameters: use multi-line format
-                if not self.first_line:
-                    raw += '\n' + self.docs['out']['spaces']
-                raw += with_space(self.docs['out']['desc']).strip() + '\n'
-                if raw.count(self.quotes) == 1:
-                    raw += self.docs['out']['spaces'] + self.quotes
-                self.docs['out']['raw'] = raw.rstrip()
-                return
-        # If there are parameters/returns/raises, always put description on a new line
-        has_sections = (self.docs['out']['params'] or self.docs['out']['return'] or 
-                        self.docs['out']['rtype'] or self.docs['out']['raises'])
-        if has_sections or not self.first_line or is_auto_generated_name:
-            raw += '\n' + self.docs['out']['spaces']
-        raw += with_space(self.docs['out']['desc']).strip() + '\n'
-
-        # sets the parameters section
-        raw += self._set_raw_params(sep)
-
-        # sets the return section
-        raw += self._set_raw_return(sep)
-
-        # sets the raises section
-        raw += self._set_raw_raise(sep)
-
-        # sets post specific if any
-        if 'post' in self.docs['out']:
-            raw += self.docs['out']['spaces'] + with_space(self.docs['out']['post']).strip() + '\n'
-
-        # sets the doctests if any
-        if 'doctests' in self.docs['out']:
-            raw += self.docs['out']['spaces'] + with_space(self.docs['out']['doctests']).strip() + '\n'
-
-        if raw.count(self.quotes) == 1:
-            raw += self.docs['out']['spaces'] + self.quotes
-        self.docs['out']['raw'] = raw.rstrip()
+        builder = self._create_builder()
+        self.docs['out']['raw'] = builder.build()
 
     def generate_docs(self):
         """Generates the output docstring"""

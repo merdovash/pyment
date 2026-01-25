@@ -1,0 +1,8 @@
+[
+  {
+    "name": "foo",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Bar bar bar."
+  }
+]

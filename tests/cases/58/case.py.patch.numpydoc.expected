@@ -1,0 +1,20 @@
+--- a/case.py
++++ b/case.py
+@@ -1,5 +1,16 @@
+ def func(param): # some comment
+-    """some docstring"""
++    """
++    some docstring
++
++    Parameters
++    ----------
++    param :
++        
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 

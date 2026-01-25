@@ -4,12 +4,12 @@
 +++ b/params.py
 @@ -1,36 +1,145 @@
  def func1():
-+    """ """
++    """Func1 """
      pass
  
  
  def func2(param1):
-+    """
++    """Func2
 +
 +    Parameters
 +    ----------
@@ -24,7 +24,7 @@
  
  
  def func3(param1, param2):
-+    """
++    """Func3
 +
 +    Parameters
 +    ----------
@@ -41,7 +41,7 @@
  
  
  def func3(param1, param2, param3):
-+    """
++    """Func3
 +
 +    Parameters
 +    ----------
@@ -60,7 +60,7 @@
  
  
  def func4(param1=123):
-+    """
++    """Func4
 +
 +    Parameters
 +    ----------
@@ -75,7 +75,7 @@
  
  
  def func5(param1, param2=123):
-+    """
++    """Func5
 +
 +    Parameters
 +    ----------
@@ -92,7 +92,7 @@
  
  
  def func6(param1, param2, param3=123):
-+    """
++    """Func6
 +
 +    Parameters
 +    ----------
@@ -111,7 +111,7 @@
  
  
  def func7(param1, param2=None, param3=123):
-+    """
++    """Func7
 +
 +    Parameters
 +    ----------
@@ -130,7 +130,7 @@
  
  
  def func8(param1=123, param2=+456, param3="!:@"):
-+    """
++    """Func8
 +
 +    Parameters
 +    ----------
@@ -149,7 +149,7 @@
  
  
  def func9(param1=func1(), param2="stuff"):
-+    """
++    """Func9
 +
 +    Parameters
 +    ----------
@@ -166,7 +166,7 @@
  
  
  def func10(param1=func1(), param2="stuff"):  # comments with (parentheses):
-+    """
++    """Func10
 +
 +    Parameters
 +    ----------

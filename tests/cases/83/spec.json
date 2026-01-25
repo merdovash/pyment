@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Foo",
+    "deftype": "class",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "Bar",
+    "deftype": "class",
+    "input_style": "javadoc",
+    "description": ""
+  }
+]

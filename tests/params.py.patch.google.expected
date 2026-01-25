@@ -4,12 +4,12 @@
 +++ b/params.py
 @@ -1,36 +1,111 @@
  def func1():
-+    """ """
++    """Func1 """
      pass
  
  
  def func2(param1):
-+    """
++    """Func2
 +
 +    Args:
 +        param1: 
@@ -21,7 +21,7 @@
  
  
  def func3(param1, param2):
-+    """
++    """Func3
 +
 +    Args:
 +        param1: 
@@ -34,7 +34,7 @@
  
  
  def func3(param1, param2, param3):
-+    """
++    """Func3
 +
 +    Args:
 +        param1: 
@@ -48,7 +48,7 @@
  
  
  def func4(param1=123):
-+    """
++    """Func4
 +
 +    Args:
 +        param1:  (Default value = 123)
@@ -60,7 +60,7 @@
  
  
  def func5(param1, param2=123):
-+    """
++    """Func5
 +
 +    Args:
 +        param1: 
@@ -73,7 +73,7 @@
  
  
  def func6(param1, param2, param3=123):
-+    """
++    """Func6
 +
 +    Args:
 +        param1: 
@@ -87,7 +87,7 @@
  
  
  def func7(param1, param2=None, param3=123):
-+    """
++    """Func7
 +
 +    Args:
 +        param1: 
@@ -101,7 +101,7 @@
  
  
  def func8(param1=123, param2=+456, param3="!:@"):
-+    """
++    """Func8
 +
 +    Args:
 +        param1:  (Default value = 123)
@@ -115,7 +115,7 @@
  
  
  def func9(param1=func1(), param2="stuff"):
-+    """
++    """Func9
 +
 +    Args:
 +        param1:  (Default value = func1())
@@ -128,7 +128,7 @@
  
  
  def func10(param1=func1(), param2="stuff"):  # comments with (parentheses):
-+    """
++    """Func10
 +
 +    Args:
 +        param1:  (Default value = func1())

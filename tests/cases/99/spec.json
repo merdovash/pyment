@@ -1,0 +1,14 @@
+[
+  {
+    "name": "func1",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": "Description"
+  },
+  {
+    "name": "func2",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Description"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "func1",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "func2",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  },
+  {
+    "name": "func3",
+    "deftype": "def",
+    "input_style": "javadoc",
+    "description": ""
+  }
+]
