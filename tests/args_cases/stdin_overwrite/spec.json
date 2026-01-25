@@ -1,0 +1,10 @@
+{
+  "cmd_args": "-w -",
+  "write_to_stdin": true,
+  "output_format": "google",
+  "overwrite_mode": true,
+  "expected_returncode": 0,
+  "expected_stderr": "",
+  "test_type": "stdin_overwrite"
+}
+

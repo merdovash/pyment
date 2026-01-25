@@ -1,0 +1,12 @@
+{
+  "cmd_args": "",
+  "write_to_stdin": false,
+  "output_format": null,
+  "overwrite_mode": false,
+  "expected_returncode": 2,
+  "expected_stderr_regex": "usage: pymentapp\\.py \\[-h\\] \\[-i style\\] \\[-o style\\] \\[-q quotes\\] \\[-f status\\] \\[-t\\].*?\\[-c config\\] \\[-d\\] \\[-p status\\] \\[-v\\] \\[-w\\] \\[-s spaces\\] \\[-e\\].*?\\[--file-comment\\] \\[--extensions extensions\\].*?\\[--encoding encoding\\] \\[--exclude patterns\\].*?path.*?pymentapp\\.py: error: the following arguments are required: path",
+  "test_type": "no_args",
+  "python_version_min": "3.3",
+  "python_version_max": null
+}
+

@@ -1,0 +1,10 @@
+{
+  "cmd_args": "",
+  "write_to_stdin": false,
+  "output_format": "google",
+  "overwrite_mode": false,
+  "expected_returncode": 0,
+  "expected_stderr": "",
+  "test_type": "file_patch"
+}
+

@@ -1,0 +1,12 @@
+{
+  "cmd_args": "",
+  "write_to_stdin": false,
+  "output_format": null,
+  "overwrite_mode": false,
+  "expected_returncode": 2,
+  "expected_stderr_regex": "too few arguments",
+  "test_type": "no_args",
+  "python_version_min": null,
+  "python_version_max": "3.2"
+}
+
