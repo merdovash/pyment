@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 import pyment
 
@@ -19,6 +19,8 @@ setup(name='Pyment',
       author='A. Daouzli',
       author_email='dadel@hadoly.fr',
       license='GPLv3',
+      maintainer='V. Schekochihin',
+      maintainer_email='merd888888@gmail.com',
       keywords="pyment docstring numpydoc googledoc restructuredtext epydoc epytext javadoc development generate auto",
       platforms=['any'],
       classifiers=[
@@ -30,9 +32,10 @@ setup(name='Pyment',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.11',
           ],
-      url='https://github.com/dadadel/pyment',
-      packages=['pyment'],
+      url='https://github.com/merdovash/pyment',
+      packages=find_packages(),
       test_suite='tests.test_all',
       entry_points={
         'console_scripts': [
