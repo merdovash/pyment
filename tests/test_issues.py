@@ -4,6 +4,8 @@ import unittest
 import os
 import json
 import re
+import argparse
+import sys
 import pyment.pyment as pym
 from parameterized import parameterized
 
@@ -12,6 +14,11 @@ absdir = lambda f: os.path.join(current_dir, f)
 
 # All supported strategies
 STRATEGIES = ['javadoc', 'reST', 'google', 'numpydoc']
+
+# Global filter variables (set by command-line arguments)
+_filter_issues = None
+_filter_strategies = None
+_filter_test_type = None
 
 # Issue definitions: (issue_name, folder_name, base_kwargs, use_proceed, expected_failure)
 ISSUES = [
@@ -47,19 +54,76 @@ ISSUES = [
     ('case_docs_already_javadoc', 'docs_already_javadoc', {}, False, False),
     ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, True),
     ('case_docs_already_google', 'docs_already_google', {}, False, True),
+    ('case_already_good', 'already_good', {}, False, False),
 ]
+
+
+def _should_run_issue(issue_name, folder_name):
+    """Check if an issue should be run based on filters"""
+    if _filter_issues is None:
+        return True
+    return issue_name in _filter_issues or folder_name in _filter_issues
+
+
+def _should_run_strategy(strategy):
+    """Check if a strategy should be run based on filters"""
+    if _filter_strategies is None:
+        return True
+    return strategy in _filter_strategies
 
 
 class IssuesTests(unittest.TestCase):
     maxDiff = None
+    
+    @parameterized.expand([
+        (f'{issue_name}_meta', folder_name, base_kwargs, use_proceed, expected_failure)
+        for issue_name, folder_name, base_kwargs, use_proceed, expected_failure in ISSUES
+        if _should_run_issue(issue_name, folder_name)
+    ])
+    def test_meta(self, issue_name, folder_name, base_kwargs, use_proceed, expected_failure):
+        # Runtime filtering
+        if _filter_test_type is not None and _filter_test_type != 'meta':
+            self.skipTest(f'Skipped: test-type filter is {_filter_test_type}')
+        if not _should_run_issue(issue_name, folder_name):
+            self.skipTest(f'Skipped: issue {issue_name} not in filter')
+
+        file_name = os.path.join('cases', folder_name, 'case.py')
+        spec_data = self._load_spec_json(os.path.join('cases', folder_name))
+        if spec_data is not None:
+            calculated_specs = self._extract_calculated_specs(file_name, base_kwargs)
+            if calculated_specs is not None:
+                # Compare spec.json with calculated specs
+                with self.subTest(check='spec_json'):
+                    self.assertEqual(len(spec_data), len(calculated_specs),
+                                    f'Number of elements mismatch: spec.json has {len(spec_data)}, calculated has {len(calculated_specs)}')
+
+                    for i, (spec_item, calc_item) in enumerate(zip(spec_data, calculated_specs)):
+                        with self.subTest(element_index=i, element_name=spec_item.get('name', 'unknown')):
+                            self.assertEqual(spec_item.get('name'), calc_item.get('name'),
+                                            f'Name mismatch for element {i}')
+                            self.assertEqual(spec_item.get('deftype'), calc_item.get('deftype'),
+                                            f'Deftype mismatch for element {i}')
+                            self.assertEqual(spec_item.get('input_style'), calc_item.get('input_style'),
+                                            f'Input style mismatch for element {i}: expected {spec_item.get("input_style")}, got {calc_item.get("input_style")}')
+                            self.assertEqual(spec_item.get('description'), calc_item.get('description'),
+                                            f'Description mismatch for element {i}')
 
     @parameterized.expand([
-        (issue_name, folder_name, strategy, base_kwargs, use_proceed, expected_failure)
+        (f'{issue_name}_{strategy}', folder_name, strategy, base_kwargs, use_proceed, expected_failure)
         for issue_name, folder_name, base_kwargs, use_proceed, expected_failure in ISSUES
+        if _should_run_issue(issue_name, folder_name)
         for strategy in STRATEGIES
     ])
     def test_full(self, issue_name, folder_name, strategy, base_kwargs, use_proceed, expected_failure):
         """Parameterized test for all issue tests across all strategies"""
+        # Runtime filtering
+        if _filter_test_type is not None and _filter_test_type != 'full':
+            self.skipTest(f'Skipped: test-type filter is {_filter_test_type}')
+        if not _should_run_issue(issue_name, folder_name):
+            self.skipTest(f'Skipped: issue {issue_name} not in filter')
+        if not _should_run_strategy(strategy):
+            self.skipTest(f'Skipped: strategy {strategy} not in filter')
+        
         # Create kwargs for this strategy
         kwargs = base_kwargs.copy()
         kwargs['output_style'] = strategy
@@ -67,28 +131,6 @@ class IssuesTests(unittest.TestCase):
         # Build file paths
         file_name = os.path.join('cases', folder_name, 'case.py')
         expected_file = os.path.join('cases', folder_name, f'case.py.patch.{strategy}.expected')
-        
-        # Test spec.json if it exists (only for first strategy to avoid duplication)
-        if strategy == STRATEGIES[0]:
-            spec_data = self._load_spec_json(os.path.join('cases', folder_name))
-            if spec_data is not None:
-                calculated_specs = self._extract_calculated_specs(file_name, base_kwargs)
-                if calculated_specs is not None:
-                    # Compare spec.json with calculated specs
-                    with self.subTest(check='spec_json'):
-                        self.assertEqual(len(spec_data), len(calculated_specs),
-                                       f'Number of elements mismatch: spec.json has {len(spec_data)}, calculated has {len(calculated_specs)}')
-                        
-                        for i, (spec_item, calc_item) in enumerate(zip(spec_data, calculated_specs)):
-                            with self.subTest(element_index=i, element_name=spec_item.get('name', 'unknown')):
-                                self.assertEqual(spec_item.get('name'), calc_item.get('name'),
-                                               f'Name mismatch for element {i}')
-                                self.assertEqual(spec_item.get('deftype'), calc_item.get('deftype'),
-                                               f'Deftype mismatch for element {i}')
-                                self.assertEqual(spec_item.get('input_style'), calc_item.get('input_style'),
-                                               f'Input style mismatch for element {i}: expected {spec_item.get("input_style")}, got {calc_item.get("input_style")}')
-                                self.assertEqual(spec_item.get('description'), calc_item.get('description'),
-                                               f'Description mismatch for element {i}')
         
         # For expected failures, wrap the test execution
         if expected_failure:
@@ -216,7 +258,97 @@ class IssuesTests(unittest.TestCase):
             self.fail(f'Failed to extract specs from {file_name}: {e}')
 
 
+def parse_arguments():
+    """Parse command-line arguments for test filtering"""
+    parser = argparse.ArgumentParser(
+        description='Run pyment issue tests with optional filtering',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run all tests
+  python test_issues.py
+
+  # Run tests for specific issue(s) by name or folder
+  python test_issues.py --issue issue9
+  python test_issues.py --issue 9
+  python test_issues.py --issue issue9 issue10
+
+  # Run tests for specific strategy(ies)
+  python test_issues.py --strategy javadoc
+  python test_issues.py --strategy javadoc google
+
+  # Run only meta tests or full tests
+  python test_issues.py --test-type meta
+  python test_issues.py --test-type full
+
+  # Combine filters
+  python test_issues.py --issue issue9 --strategy javadoc
+  python test_issues.py --issue 9 --test-type full --strategy reST
+        """
+    )
+    
+    parser.add_argument(
+        '--issue', '-i',
+        nargs='+',
+        metavar='ISSUE',
+        help='Filter by issue name(s) or folder name(s). Can specify multiple issues.'
+    )
+    
+    parser.add_argument(
+        '--strategy', '-s',
+        nargs='+',
+        choices=STRATEGIES,
+        metavar='STRATEGY',
+        help=f'Filter by output strategy(ies). Choices: {", ".join(STRATEGIES)}'
+    )
+    
+    parser.add_argument(
+        '--test-type', '-t',
+        choices=['meta', 'full'],
+        metavar='TYPE',
+        help='Filter by test type: "meta" (spec.json tests) or "full" (output comparison tests)'
+    )
+    
+    parser.add_argument(
+        '--list-issues',
+        action='store_true',
+        help='List all available issues and exit'
+    )
+    
+    # Parse known args to avoid conflicts with unittest.main()
+    args, unittest_args = parser.parse_known_args()
+    
+    return args, unittest_args
+
+
 def main():
+    global _filter_issues, _filter_strategies, _filter_test_type
+    
+    args, unittest_args = parse_arguments()
+    
+    # Handle --list-issues flag
+    if args.list_issues:
+        print("Available issues:")
+        for issue_name, folder_name, _, _, _ in ISSUES:
+            print(f"  {issue_name} (folder: {folder_name})")
+        sys.exit(0)
+    
+    # Set global filter variables
+    _filter_issues = args.issue
+    _filter_strategies = args.strategy
+    _filter_test_type = args.test_type
+    
+    # Validate filters
+    if _filter_issues:
+        valid_issues = {issue[0] for issue in ISSUES} | {issue[1] for issue in ISSUES}
+        invalid_issues = [i for i in _filter_issues if i not in valid_issues]
+        if invalid_issues:
+            print(f"Warning: Unknown issue(s): {', '.join(invalid_issues)}", file=sys.stderr)
+            print(f"Valid issues: {', '.join(sorted(valid_issues))}", file=sys.stderr)
+            sys.exit(1)
+    
+    # Pass remaining arguments to unittest.main()
+    sys.argv = [sys.argv[0]] + unittest_args
     unittest.main()
 
 

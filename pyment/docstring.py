@@ -1007,6 +1007,7 @@ class DocsTools(object):
         ret = {}
         style_param = self.opt['param'][self.style['in']]['name']
         style_type = self.opt['type'][self.style['in']]['name']
+        style_rtype = self.opt['rtype'][self.style['in']]['name']
         # fixme for return and raise, ignore last char as there's an optional 's' at the end and they are not managed in this function
         style_return = self.opt['return'][self.style['in']]['name'][:-1]
         style_raise = self.opt['raise'][self.style['in']]['name'][:-1]
@@ -1067,7 +1068,7 @@ class DocsTools(object):
                         ret[param_name] = {'type': None, 'type_in_param': None, 'description': None}
                     if param_type:
                         ret[param_name]['type'] = param_type.strip()
-            elif line.strip().startswith(style_raise) or line.startswith(style_return):
+            elif line.strip().startswith(style_raise) or line.startswith(style_return) or line.startswith(style_rtype):
                 # fixme not managed in this function
                 last_element['nature'] = 'raise-return'
                 last_element['name'] = None
