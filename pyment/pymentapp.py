@@ -260,8 +260,8 @@ def main():
     
     desc = 'Pyment v{0} - {1} - {2} - {3}'.format(__version__, __copyright__, __author__, __licence__)
     parser = argparse.ArgumentParser(description='Generates patches after (re)writing docstrings.')
-    parser.add_argument('path', type=str,
-                        help='python file or folder containing python files to proceed (explore also sub-folders). Use "-" to read from stdin and write to stdout')
+    parser.add_argument('path', type=str, nargs='*',
+                        help='python file(s) or folder(s) containing python files to proceed (explore also sub-folders). Use "-" to read from stdin and write to stdout. Can accept multiple files/folders.')
     parser.add_argument('-i', '--input', metavar='style', default='auto',
                         dest='input', help='Input docstring style in ["javadoc", "reST", "numpydoc", "google", "auto"] (default autodetected)')
     parser.add_argument('-o', '--output', metavar='style', default="reST",
@@ -310,8 +310,14 @@ def main():
     #                   dest='config', help='Configuration file')
 
     args = parser.parse_args()
-    source = args.path
-
+    
+    # Handle paths: support both single path (backward compatibility) and multiple paths (pre-commit hook)
+    paths = args.path if args.path else []
+    
+    # If no paths provided, show error
+    if not paths:
+        parser.error("the following arguments are required: path")
+    
     # Parse extensions if provided
     extensions = None
     if args.extensions:
@@ -362,7 +368,7 @@ def main():
 
     # Debug: Print parsed arguments
     print("DEBUG: Parsed arguments:", file=sys.stderr)
-    print(f"DEBUG:   path: {args.path}", file=sys.stderr)
+    print(f"DEBUG:   paths: {paths}", file=sys.stderr)
     print(f"DEBUG:   input: {args.input}", file=sys.stderr)
     print(f"DEBUG:   output: {args.output}", file=sys.stderr)
     print(f"DEBUG:   extensions: {extensions}", file=sys.stderr)
@@ -370,7 +376,19 @@ def main():
     print(f"DEBUG:   overwrite: {args.overwrite}", file=sys.stderr)
     print(f"DEBUG:   method_scope: {method_scope}", file=sys.stderr)
     
-    files = get_files_from_dir(source, extensions=extensions, exclude=exclude)
+    # Collect all files from all paths
+    all_files = []
+    for path in paths:
+        files_from_path = get_files_from_dir(path, extensions=extensions, exclude=exclude)
+        all_files.extend(files_from_path)
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    files = []
+    for f in all_files:
+        if f not in seen:
+            seen.add(f)
+            files.append(f)
     
     # Debug: Print files that will be processed
     print("DEBUG: Files to be processed:", file=sys.stderr)
@@ -381,12 +399,22 @@ def main():
         print("DEBUG:   (no files found)", file=sys.stderr)
     
     if not files:
-        msg = BaseException("No files were found matching {0}".format(args.path))
+        paths_str = ', '.join(paths) if len(paths) > 1 else paths[0] if paths else 'none'
+        msg = BaseException("No files were found matching {0}".format(paths_str))
         raise msg
+    
     if not args.config_file:
         config_file = ''
     else:
         config_file = args.config_file
+
+    # Determine source for run() function - use first path if single, or empty string if multiple
+    # The run() function uses source to determine relative paths for patches
+    if len(paths) == 1:
+        source = paths[0]
+    else:
+        # For multiple paths, we'll use empty string and let run() handle it
+        source = ''
 
     has_changes = run(source, files, args.input, args.output,
         tobool(args.first_line), args.quotes,

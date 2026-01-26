@@ -1,0 +1,14 @@
+def func():
+    """
+    First line
+
+    Args:
+
+    Returns:
+        ret type: smthg
+
+    Raises:
+
+    """
+    pass
+

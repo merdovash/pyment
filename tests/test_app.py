@@ -483,3 +483,158 @@ class FilePatchTests(AppTestsBase):
                 os.remove(input_filename)
             if os.path.exists(patch_filename):
                 os.remove(patch_filename)
+
+
+class PreCommitHookTests(AppTestsBase):
+    """Test cases for pre-commit hook behavior
+    
+    Pre-commit passes files as command line arguments. The hook should:
+    1. Process all files passed as arguments
+    2. Return exit code 0 if no changes are needed
+    3. Return exit code 1 if changes are needed
+    """
+
+    def _load_precommit_spec(self, folder_path):
+        """Load spec.json from precommit hook test folder"""
+        spec_file = self.absdir(os.path.join('args_cases', folder_path, 'spec.json'))
+        if not os.path.exists(spec_file):
+            return None
+        
+        try:
+            with open(spec_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            self.fail(f'Failed to load spec.json from {folder_path}: {e}')
+
+    def _load_precommit_file(self, folder_path, filename):
+        """Load a file from precommit hook test folder"""
+        file_path = self.absdir(os.path.join('args_cases', folder_path, filename))
+        if not os.path.exists(file_path):
+            return None
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            self.fail(f'Failed to load file {filename} from {folder_path}: {e}')
+
+    def test_precommit_hook_single_file_with_changes(self):
+        """Test pre-commit hook with a single file that needs changes"""
+        folder_name = 'precommit_hook'
+        spec = self._load_precommit_spec(folder_name)
+        if spec is None:
+            self.skipTest(f'No spec.json found for {folder_name}')
+        
+        # Create temporary file with changes needed
+        input_content = self._load_precommit_file(folder_name, 'file_with_changes.py')
+        if input_content is None:
+            self.skipTest(f'Missing input file for {folder_name}')
+        
+        input_fd, input_filename = tempfile.mkstemp(suffix='.py', text=True)
+        try:
+            with os.fdopen(input_fd, 'w') as f:
+                f.write(input_content)
+            
+            output_format = spec.get('output_format', 'google')
+            cmd_to_run = f'{self.CMD_PREFIX.format(input_filename)} --output {output_format}'
+            
+            stdout, stderr, returncode = self.run_command(cmd_to_run)
+            
+            # Should return 1 (or 2 if argparse error) because file needs changes
+            # Current implementation may fail with argparse error if multiple files passed
+            # But single file should work
+            expected_returncode = spec.get('expected_returncode_with_changes', 1)
+            
+            # Check if we got expected return code or argparse error (code 2)
+            # If argparse error, that's the bug we're testing for
+            if returncode == 2:
+                # This indicates argparse error - the hook doesn't support multiple files
+                self.fail(f'Argparse error when processing file (return code 2). '
+                         f'This indicates the hook may not support multiple files as pre-commit passes them. '
+                         f'Stderr: {stderr}')
+            
+            self.assertEqual(returncode, expected_returncode,
+                           f'Expected return code {expected_returncode}, got {returncode}. '
+                           f'Stdout: {stdout}, Stderr: {stderr}')
+        finally:
+            if os.path.exists(input_filename):
+                os.remove(input_filename)
+
+    def test_precommit_hook_single_file_without_changes(self):
+        """Test pre-commit hook with a single file that doesn't need changes"""
+        folder_name = 'precommit_hook'
+        spec = self._load_precommit_spec(folder_name)
+        if spec is None:
+            self.skipTest(f'No spec.json found for {folder_name}')
+        
+        # Create temporary file without changes needed
+        input_content = self._load_precommit_file(folder_name, 'file_without_changes.py')
+        if input_content is None:
+            self.skipTest(f'Missing input file for {folder_name}')
+        
+        input_fd, input_filename = tempfile.mkstemp(suffix='.py', text=True)
+        try:
+            with os.fdopen(input_fd, 'w') as f:
+                f.write(input_content)
+            
+            output_format = spec.get('output_format', 'google')
+            cmd_to_run = f'{self.CMD_PREFIX.format(input_filename)} --output {output_format}'
+            
+            stdout, stderr, returncode = self.run_command(cmd_to_run)
+            
+            # Should return 0 because file doesn't need changes
+            expected_returncode = spec.get('expected_returncode_without_changes', 0)
+            
+            self.assertEqual(returncode, expected_returncode,
+                           f'Expected return code {expected_returncode}, got {returncode}. '
+                           f'Stdout: {stdout}, Stderr: {stderr}')
+        finally:
+            if os.path.exists(input_filename):
+                os.remove(input_filename)
+
+    def test_precommit_hook_multiple_files(self):
+        """Test pre-commit hook with multiple files (as pre-commit actually passes them)
+        
+        This test simulates how pre-commit actually calls the hook:
+        pyment file1.py file2.py file3.py
+        
+        After fix, this should work correctly with multiple files as positional arguments.
+        """
+        folder_name = 'precommit_hook'
+        spec = self._load_precommit_spec(folder_name)
+        if spec is None:
+            self.skipTest(f'No spec.json found for {folder_name}')
+        
+        # Create temporary files
+        file_with_changes = self._load_precommit_file(folder_name, 'file_with_changes.py')
+        file_without_changes = self._load_precommit_file(folder_name, 'file_without_changes.py')
+        
+        if file_with_changes is None or file_without_changes is None:
+            self.skipTest(f'Missing input files for {folder_name}')
+        
+        input_fd1, input_filename1 = tempfile.mkstemp(suffix='.py', text=True)
+        input_fd2, input_filename2 = tempfile.mkstemp(suffix='.py', text=True)
+        
+        try:
+            with os.fdopen(input_fd1, 'w') as f:
+                f.write(file_with_changes)
+            with os.fdopen(input_fd2, 'w') as f:
+                f.write(file_without_changes)
+            
+            output_format = spec.get('output_format', 'google')
+            # Simulate pre-commit passing multiple files as arguments
+            # After fix, this should work correctly
+            cmd_to_run = f'{sys.executable} -m pyment.pymentapp --output {output_format} {input_filename1} {input_filename2}'
+            
+            stdout, stderr, returncode = self.run_command(cmd_to_run)
+            
+            # After fix, should return 1 because at least one file needs changes
+            expected_returncode = spec.get('expected_returncode_with_changes', 1)
+            self.assertEqual(returncode, expected_returncode,
+                           f'Expected return code {expected_returncode}, got {returncode}. '
+                           f'Stdout: {stdout}, Stderr: {stderr}')
+        finally:
+            if os.path.exists(input_filename1):
+                os.remove(input_filename1)
+            if os.path.exists(input_filename2):
+                os.remove(input_filename2)

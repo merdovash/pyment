@@ -5,3 +5,4 @@
   args: []
   language: python
   types_or: [python, pyi, jupyter]
+  pass_filenames: true

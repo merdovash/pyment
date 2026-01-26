@@ -1,0 +1,18 @@
+{
+  "test_type": "precommit_hook",
+  "description": "Test pre-commit hook behavior with multiple files",
+  "files": [
+    {
+      "name": "file_with_changes.py",
+      "has_changes": true
+    },
+    {
+      "name": "file_without_changes.py",
+      "has_changes": false
+    }
+  ],
+  "expected_returncode_with_changes": 1,
+  "expected_returncode_without_changes": 0,
+  "output_format": "google"
+}
+
