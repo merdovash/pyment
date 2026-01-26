@@ -254,9 +254,11 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
 
 
 def main():
-    # Debug: Print arguments passed to the script
-    print("DEBUG: Script arguments (sys.argv):", file=sys.stderr)
-    print(f"DEBUG:   {sys.argv}", file=sys.stderr)
+    # Debug: Print arguments passed to the script - this should be the FIRST thing
+    # Force flush to ensure output is visible even if process exits early
+    sys.stderr.write("DEBUG: Pyment hook started\n")
+    sys.stderr.write(f"DEBUG: Script arguments (sys.argv): {sys.argv}\n")
+    sys.stderr.flush()
     
     desc = 'Pyment v{0} - {1} - {2} - {3}'.format(__version__, __copyright__, __author__, __licence__)
     parser = argparse.ArgumentParser(description='Generates patches after (re)writing docstrings.')
@@ -311,11 +313,19 @@ def main():
 
     args = parser.parse_args()
     
+    sys.stderr.write(f"DEBUG: After parsing arguments\n")
+    sys.stderr.flush()
+    
     # Handle paths: support both single path (backward compatibility) and multiple paths (pre-commit hook)
     paths = args.path if args.path else []
     
+    sys.stderr.write(f"DEBUG: Paths received: {paths}\n")
+    sys.stderr.flush()
+    
     # If no paths provided, show error
     if not paths:
+        sys.stderr.write("DEBUG: No paths provided, showing error\n")
+        sys.stderr.flush()
         parser.error("the following arguments are required: path")
     
     # Parse extensions if provided
@@ -367,20 +377,61 @@ def main():
             method_scope = [s for s in method_scope if s != 'private']
 
     # Debug: Print parsed arguments
-    print("DEBUG: Parsed arguments:", file=sys.stderr)
-    print(f"DEBUG:   paths: {paths}", file=sys.stderr)
-    print(f"DEBUG:   input: {args.input}", file=sys.stderr)
-    print(f"DEBUG:   output: {args.output}", file=sys.stderr)
-    print(f"DEBUG:   extensions: {extensions}", file=sys.stderr)
-    print(f"DEBUG:   exclude: {exclude}", file=sys.stderr)
-    print(f"DEBUG:   overwrite: {args.overwrite}", file=sys.stderr)
-    print(f"DEBUG:   method_scope: {method_scope}", file=sys.stderr)
+    sys.stderr.write("DEBUG: Parsed arguments:\n")
+    sys.stderr.write(f"DEBUG:   paths: {paths}\n")
+    sys.stderr.write(f"DEBUG:   input: {args.input}\n")
+    sys.stderr.write(f"DEBUG:   output: {args.output}\n")
+    sys.stderr.write(f"DEBUG:   extensions: {extensions}\n")
+    sys.stderr.write(f"DEBUG:   exclude: {exclude}\n")
+    sys.stderr.write(f"DEBUG:   overwrite: {args.overwrite}\n")
+    sys.stderr.write(f"DEBUG:   file_comment: {args.file_comment}\n")
+    sys.stderr.write(f"DEBUG:   description_on_new_line: {args.description_on_new_line}\n")
+    sys.stderr.write(f"DEBUG:   method_scope: {method_scope}\n")
+    sys.stderr.flush()
+    
+    # Helper function to check if a file should be included
+    def should_include_file(filepath):
+        """Check if a file should be included based on extensions and exclude patterns."""
+        # Check extensions if specified
+        if extensions:
+            if not any(filepath.endswith(ext) for ext in extensions):
+                return False
+        
+        # Check exclude patterns if specified
+        if exclude:
+            filename = os.path.basename(filepath)
+            for pattern in exclude:
+                if fnmatch.fnmatch(filename, pattern) or fnmatch.fnmatch(filepath, pattern):
+                    return False
+        return True
     
     # Collect all files from all paths
     all_files = []
     for path in paths:
-        files_from_path = get_files_from_dir(path, extensions=extensions, exclude=exclude)
-        all_files.extend(files_from_path)
+        # Handle stdin separately
+        if path == '-':
+            all_files.append(path)
+        # If path is a file, add it directly after filtering
+        elif os.path.isfile(path):
+            sys.stderr.write(f"DEBUG: Found file: {path}\n")
+            sys.stderr.flush()
+            if should_include_file(path):
+                sys.stderr.write(f"DEBUG: File passed filters, adding to list: {path}\n")
+                sys.stderr.flush()
+                all_files.append(path)
+            else:
+                sys.stderr.write(f"DEBUG: Skipping file (filtered out): {path}\n")
+                sys.stderr.flush()
+        # If path is a directory, use get_files_from_dir (which already applies filters)
+        elif os.path.isdir(path):
+            sys.stderr.write(f"DEBUG: Found directory: {path}\n")
+            sys.stderr.flush()
+            files_from_path = get_files_from_dir(path, extensions=extensions, exclude=exclude)
+            all_files.extend(files_from_path)
+        else:
+            # Path doesn't exist - skip it (pre-commit may pass non-existent files)
+            sys.stderr.write(f"DEBUG: Skipping non-existent path: {path}\n")
+            sys.stderr.flush()
     
     # Remove duplicates while preserving order
     seen = set()
@@ -391,17 +442,22 @@ def main():
             files.append(f)
     
     # Debug: Print files that will be processed
-    print("DEBUG: Files to be processed:", file=sys.stderr)
+    sys.stderr.write("DEBUG: Files to be processed:\n")
+    sys.stderr.flush()
     if files:
         for f in files:
-            print(f"DEBUG:   - {f}", file=sys.stderr)
+            sys.stderr.write(f"DEBUG:   - {f}\n")
+        sys.stderr.flush()
     else:
-        print("DEBUG:   (no files found)", file=sys.stderr)
+        sys.stderr.write("DEBUG:   (no files found)\n")
+        sys.stderr.flush()
     
     if not files:
-        paths_str = ', '.join(paths) if len(paths) > 1 else paths[0] if paths else 'none'
-        msg = BaseException("No files were found matching {0}".format(paths_str))
-        raise msg
+        # For pre-commit hooks, if no files match filters, exit successfully (no changes needed)
+        # This is better than raising an error, as it allows the hook to pass when files are filtered out
+        sys.stderr.write("DEBUG: No files to process after filtering - exiting with code 0\n")
+        sys.stderr.flush()
+        sys.exit(0)
     
     if not args.config_file:
         config_file = ''
@@ -416,6 +472,9 @@ def main():
         # For multiple paths, we'll use empty string and let run() handle it
         source = ''
 
+    sys.stderr.write(f"DEBUG: About to call run() with {len(files)} file(s)\n")
+    sys.stderr.flush()
+    
     has_changes = run(source, files, args.input, args.output,
         tobool(args.first_line), args.quotes,
         args.init2class, args.convert, config_file,
@@ -425,12 +484,17 @@ def main():
         description_on_new_line=args.description_on_new_line,
         method_scope=method_scope)
     
+    sys.stderr.write(f"DEBUG: run() returned has_changes={has_changes}\n")
+    sys.stderr.flush()
+    
     # Exit with code 0 if no changes, non-zero if changes were made
     if has_changes:
-        print("DEBUG: Exiting with code 1 (changes were made)", file=sys.stderr)
+        sys.stderr.write("DEBUG: Exiting with code 1 (changes were made)\n")
+        sys.stderr.flush()
         sys.exit(1)
     else:
-        print("DEBUG: Exiting with code 0 (no changes)", file=sys.stderr)
+        sys.stderr.write("DEBUG: Exiting with code 0 (no changes)\n")
+        sys.stderr.flush()
         sys.exit(0)
 
 
