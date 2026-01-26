@@ -170,6 +170,11 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                 raise ValueError(f"Invalid method scope(s) in config file: {', '.join(invalid_scopes)}. Valid scopes are: {', '.join(valid_scopes)}")
         elif isinstance(method_scope_config, list):
             method_scope = [s.lower() if isinstance(s, str) else s for s in method_scope_config]
+    
+    # Track changes across all files
+    files_changed = []
+    has_changes = False
+    
     for f in files:
         try:
             if os.path.isdir(source):
@@ -201,20 +206,35 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             # Print processing actions on the same line
             print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
 
+            # Compute before/after to detect changes (used for both overwrite and patch modes)
+            list_from, list_to = c.compute_before_after()
+            file_changed = list_from != list_to
+
             if overwrite:
-                list_from, list_to = c.compute_before_after()
                 lines_to_write = list_to
             else:
                 lines_to_write = c.get_patch_lines(path, path)
+
+            # Debug: Print change status for this file
+            if f != '-':
+                if file_changed:
+                    print(f"DEBUG: Changes detected in {f}", file=sys.stderr)
+                    files_changed.append(f)
+                else:
+                    print(f"DEBUG: No changes in {f}", file=sys.stderr)
+            
+            if file_changed:
+                has_changes = True
 
             if f == '-':
                 sys.stdout.writelines(lines_to_write)
             else:
                 if overwrite:
-                    if list_from != list_to:
+                    if file_changed:
                         c.overwrite_source_file(lines_to_write)
                 else:
-                    c.write_patch_file(os.path.basename(f) + ".patch", lines_to_write)
+                    if file_changed:
+                        c.write_patch_file(os.path.basename(f) + ".patch", lines_to_write)
         except Exception as e:
             # Print error message and continue to next file
             if f != '-':
@@ -222,9 +242,22 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             else:
                 print(f"\nError processing stdin: {str(e)}", file=sys.stderr)
             continue
+    
+    # Debug: Print summary of changes
+    print("DEBUG: Summary of changes:", file=sys.stderr)
+    if files_changed:
+        print(f"DEBUG:   {len(files_changed)} file(s) changed: {', '.join(files_changed)}", file=sys.stderr)
+    else:
+        print("DEBUG:   No files changed", file=sys.stderr)
+    
+    return has_changes
 
 
 def main():
+    # Debug: Print arguments passed to the script
+    print("DEBUG: Script arguments (sys.argv):", file=sys.stderr)
+    print(f"DEBUG:   {sys.argv}", file=sys.stderr)
+    
     desc = 'Pyment v{0} - {1} - {2} - {3}'.format(__version__, __copyright__, __author__, __licence__)
     parser = argparse.ArgumentParser(description='Generates patches after (re)writing docstrings.')
     parser.add_argument('path', type=str,
@@ -327,7 +360,26 @@ def main():
             # remove private from the list
             method_scope = [s for s in method_scope if s != 'private']
 
+    # Debug: Print parsed arguments
+    print("DEBUG: Parsed arguments:", file=sys.stderr)
+    print(f"DEBUG:   path: {args.path}", file=sys.stderr)
+    print(f"DEBUG:   input: {args.input}", file=sys.stderr)
+    print(f"DEBUG:   output: {args.output}", file=sys.stderr)
+    print(f"DEBUG:   extensions: {extensions}", file=sys.stderr)
+    print(f"DEBUG:   exclude: {exclude}", file=sys.stderr)
+    print(f"DEBUG:   overwrite: {args.overwrite}", file=sys.stderr)
+    print(f"DEBUG:   method_scope: {method_scope}", file=sys.stderr)
+    
     files = get_files_from_dir(source, extensions=extensions, exclude=exclude)
+    
+    # Debug: Print files that will be processed
+    print("DEBUG: Files to be processed:", file=sys.stderr)
+    if files:
+        for f in files:
+            print(f"DEBUG:   - {f}", file=sys.stderr)
+    else:
+        print("DEBUG:   (no files found)", file=sys.stderr)
+    
     if not files:
         msg = BaseException("No files were found matching {0}".format(args.path))
         raise msg
@@ -336,7 +388,7 @@ def main():
     else:
         config_file = args.config_file
 
-    run(source, files, args.input, args.output,
+    has_changes = run(source, files, args.input, args.output,
         tobool(args.first_line), args.quotes,
         args.init2class, args.convert, config_file,
         ignore_private, overwrite=args.overwrite,
@@ -344,6 +396,14 @@ def main():
         file_comment=args.file_comment, encoding=args.encoding,
         description_on_new_line=args.description_on_new_line,
         method_scope=method_scope)
+    
+    # Exit with code 0 if no changes, non-zero if changes were made
+    if has_changes:
+        print("DEBUG: Exiting with code 1 (changes were made)", file=sys.stderr)
+        sys.exit(1)
+    else:
+        print("DEBUG: Exiting with code 0 (no changes)", file=sys.stderr)
+        sys.exit(0)
 
 
 if __name__ == "__main__":
