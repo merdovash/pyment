@@ -13,7 +13,7 @@ from .docstring import DocString
 __author__ = "A. Daouzli"
 __copyright__ = "Copyright 2012-2021, A. Daouzli; Copyright 2026, V. Schekochihin"
 __licence__ = "GPL3"
-__version__ = "0.4.0dev"
+__version__ = "0.5.0"
 __maintainer__ = "A. Daouzli"
 
 #TODO:

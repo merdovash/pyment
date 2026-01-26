@@ -1,15 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# VERY EARLY DEBUG - this should be visible if the script is executed at all
+import sys
+sys.stderr.write("DEBUG: pymentapp.py module loading started\n")
+sys.stderr.flush()
+
 import glob
 import argparse
 import os
-import sys
 import fnmatch
 import warnings
 
 from pyment import PyComment
 from pyment import __version__, __copyright__, __author__, __licence__
+
+sys.stderr.write("DEBUG: pymentapp.py module loaded successfully\n")
+sys.stderr.flush()
 
 
 MAX_DEPTH_RECUR = 50
