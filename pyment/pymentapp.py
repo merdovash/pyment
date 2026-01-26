@@ -6,6 +6,7 @@ import argparse
 import os
 import sys
 import fnmatch
+import warnings
 
 from pyment import PyComment
 from pyment import __version__, __copyright__, __author__, __licence__
@@ -134,7 +135,7 @@ def get_config(config_file, encoding='utf-8'):
 
 def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
         init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False):
+        skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False, method_scope=None):
     if input_style == 'auto':
         input_style = None
 
@@ -157,6 +158,18 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
         file_comment = config.pop('file_comment')
     if 'encoding' in config:
         encoding = config.pop('encoding')
+    if 'method_scope' in config:
+        method_scope_config = config.pop('method_scope')
+        # Parse method_scope from config file (comma-separated string or already a list)
+        if isinstance(method_scope_config, str):
+            method_scope = [s.strip().lower() for s in method_scope_config.split(',') if s.strip()]
+            # Validate config file values
+            valid_scopes = ['public', 'protected', 'private']
+            invalid_scopes = [s for s in method_scope if s not in valid_scopes]
+            if invalid_scopes:
+                raise ValueError(f"Invalid method scope(s) in config file: {', '.join(invalid_scopes)}. Valid scopes are: {', '.join(valid_scopes)}")
+        elif isinstance(method_scope_config, list):
+            method_scope = [s.lower() if isinstance(s, str) else s for s in method_scope_config]
     for f in files:
         try:
             if os.path.isdir(source):
@@ -179,6 +192,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                           file_comment=file_comment,
                           encoding=encoding,
                           description_on_new_line=description_on_new_line,
+                          method_scope=method_scope,
                           **config)
             c.proceed()
             if init2class:
@@ -230,7 +244,7 @@ def main():
     parser.add_argument('-d', '--init2class', help='If no docstring to class, then move the __init__ one',
                         action="store_true")
     parser.add_argument('-p', '--ignore-private', metavar='status', default="True",
-                        dest='ignore_private', help='Don\'t proceed the private methods/functions starting with __ (two underscores) (default "True")')
+                        dest='ignore_private', help='[DEPRECATED] Don\'t proceed the private methods/functions starting with __ (two underscores) (default "True"). Use --method-scope instead. This option will be removed in a future version.')
     parser.add_argument('-v', '--version', action='version',
                         version=desc)
     parser.add_argument('-w', '--write', action='store_true', dest='overwrite',
@@ -256,6 +270,10 @@ def main():
                         dest='description_on_new_line',
                         default=False,
                         help='Place description text on a new line even for single-line docstrings without parameters.')
+    parser.add_argument('--method-scope', metavar='scope', dest='method_scope',
+                        action='append',
+                        choices=['public', 'protected', 'private'],
+                        help='Method scope to process: public, protected, or private. Can be specified multiple times (e.g., --method-scope public --method-scope protected). Default processes all methods.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -280,6 +298,30 @@ def main():
         # Split by comma and strip whitespace
         exclude = [pattern.strip() for pattern in args.exclude.split(',') if pattern.strip()]
 
+    # Parse method_scope if provided (already a list from argparse append action)
+    method_scope = None
+    if args.method_scope:
+        # Normalize to lowercase (choices already validated by argparse)
+        method_scope = [s.lower() for s in args.method_scope]
+    
+    # Convert deprecated ignore_private to method_scope
+    tobool = lambda s: True if s.lower() == 'true' else False
+    ignore_private = tobool(args.ignore_private)
+    if ignore_private:
+        warnings.warn(
+            "The '--ignore-private' option is deprecated and will be removed in a future version. "
+            "Use '--method-scope public --method-scope protected' instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        # Convert ignore_private=True to method_scope=['public', 'protected']
+        if method_scope is None:
+            method_scope = ['public', 'protected']
+        elif 'private' in method_scope:
+            # If method_scope explicitly includes private but ignore_private is True,
+            # remove private from the list
+            method_scope = [s for s in method_scope if s != 'private']
+
     files = get_files_from_dir(source, extensions=extensions, exclude=exclude)
     if not files:
         msg = BaseException("No files were found matching {0}".format(args.path))
@@ -289,14 +331,14 @@ def main():
     else:
         config_file = args.config_file
 
-    tobool = lambda s: True if s.lower() == 'true' else False
     run(source, files, args.input, args.output,
         tobool(args.first_line), args.quotes,
         args.init2class, args.convert, config_file,
-        tobool(args.ignore_private), overwrite=args.overwrite,
+        ignore_private, overwrite=args.overwrite,
         spaces=args.spaces, skip_empty=args.skip_empty,
         file_comment=args.file_comment, encoding=args.encoding,
-        description_on_new_line=args.description_on_new_line)
+        description_on_new_line=args.description_on_new_line,
+        method_scope=method_scope)
 
 
 if __name__ == "__main__":

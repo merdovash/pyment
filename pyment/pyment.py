@@ -6,6 +6,7 @@ import difflib
 import platform
 import sys
 import subprocess
+import warnings
 
 from .docstring import DocString
 
@@ -36,7 +37,7 @@ class PyComment(object):
     """
     def __init__(self, input_file, input_style=None, output_style='reST', quotes='"""', first_line=True,
                  convert_only=False, config_file=None, ignore_private=False, num_of_spaces=4, skip_empty=False,
-                 file_comment=False, encoding='utf-8', **kwargs):
+                 file_comment=False, encoding='utf-8', method_scope=None, **kwargs):
         """Sets the configuration including the source to proceed and options.
 
         :param input_file: path name (file or folder)
@@ -48,11 +49,15 @@ class PyComment(object):
         :type first_line: boolean
         :param convert_only: if set only existing docstring will be converted. No missing docstring will be created.
         :param config_file: if given configuration file for Pyment
-        :param ignore_private: don't proceed the private methods/functions starting with __ (two underscores)
+        :param ignore_private: [DEPRECATED] don't proceed the private methods/functions starting with __ (two underscores).
+          Use method_scope instead. This parameter will be removed in a future version.
         :param num_of_spaces: the number of spaces for a tab on output
         :param skip_empty: if set, will not write the params, returns, or raises sections if they are empty
         :param file_comment: if set, will add a file comment with the file name at the beginning of the file
         :param encoding: the encoding to use when reading and writing files (default 'utf-8')
+        :param method_scope: list of method scopes to process: ['public', 'protected', 'private']. 
+          If None, processes all methods (unless ignore_private is True, which will exclude private).
+          Public: no leading underscore, Protected: single leading underscore, Private: double leading underscore
 
         """
         self.file_type = '.py'
@@ -69,11 +74,29 @@ class PyComment(object):
         self.quotes = quotes
         self.convert_only = convert_only
         self.config_file = config_file
-        self.ignore_private = ignore_private
+        
+        # Handle deprecated ignore_private parameter
+        if ignore_private:
+            warnings.warn(
+                "The 'ignore_private' parameter is deprecated and will be removed in a future version. "
+                "Use 'method_scope' instead. For example, use method_scope=['public', 'protected'] instead of ignore_private=True.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            # Convert ignore_private to method_scope
+            if method_scope is None:
+                method_scope = ['public', 'protected']  # Exclude private
+            elif 'private' in method_scope:
+                # If method_scope explicitly includes private but ignore_private is True,
+                # remove private from the list
+                method_scope = [s for s in method_scope if s != 'private']
+        
+        self.ignore_private = ignore_private  # Keep for backward compatibility in _should_process_method
         self.num_of_spaces = num_of_spaces
         self.skip_empty = skip_empty
         self.file_comment = file_comment
         self.encoding = encoding
+        self.method_scope = method_scope if method_scope is not None else ['public', 'protected', 'private']
         self.kwargs = kwargs
         self._has_module_docstring_cache = None
 
@@ -229,6 +252,47 @@ class PyComment(object):
         self._has_module_docstring_cache = False
         return False
 
+    def _get_method_scope(self, method_name):
+        """Determine the scope of a method based on its name.
+        
+        :param method_name: the name of the method/function
+        :returns: 'public', 'protected', or 'private'
+        :rtype: str
+        
+        """
+        if not method_name:
+            return 'public'
+        
+        # Special methods like __init__, __str__, etc. are considered public
+        if method_name.startswith('__') and method_name.endswith('__'):
+            return 'public'
+        
+        # Private methods: double leading underscore
+        if method_name.startswith('__'):
+            return 'private'
+        
+        # Protected methods: single leading underscore
+        if method_name.startswith('_'):
+            return 'protected'
+        
+        # Public methods: no leading underscore
+        return 'public'
+
+    def _should_process_method(self, method_name):
+        """Check if a method should be processed based on method_scope settings.
+        
+        :param method_name: the name of the method/function
+        :returns: True if the method should be processed, False otherwise
+        :rtype: bool
+        
+        """
+        # Check against method_scope filter
+        if self.method_scope:
+            scope = self._get_method_scope(method_name)
+            return scope in self.method_scope
+        
+        return True
+
     def _parse(self):
         """Parses the input file's content and generates a list of its elements/docstrings.
 
@@ -269,7 +333,27 @@ class PyComment(object):
                 if l.endswith(':'):
                     reading_element = 'end'
             elif (l.startswith('async def ') or l.startswith('def ') or l.startswith('class ')) and not reading_docs:
-                if self.ignore_private and l[l.find(' '):].strip().startswith("__"):
+                # Extract the name of the method/function/class
+                is_method = l.startswith('async def ') or l.startswith('def ')
+                if is_method:
+                    # Extract method name: find the space after 'def' or 'async def', then get the name
+                    if l.startswith('async def '):
+                        name_part = l[10:].strip()  # Skip 'async def '
+                    else:
+                        name_part = l[4:].strip()  # Skip 'def '
+                    # Extract name up to '(' or ':'
+                    method_name = name_part.split('(')[0].split(':')[0].strip()
+                    
+                    # Check if this method should be processed
+                    if not self._should_process_method(method_name):
+                        # If we were still looking for the class docstring, stop
+                        # looking.  Otherwise we'll mistake this method's
+                        # docstring for the class docstring and mess stuff up!
+                        # (See issue #83).
+                        waiting_docs = False
+                        continue
+                elif self.ignore_private and l[l.find(' '):].strip().startswith("__"):
+                    # For classes, maintain backward compatibility with ignore_private
                     # If we were still looking for the class docstring, stop
                     # looking.  Otherwise we'll mistake this __dunder_method__
                     # docstring for the class docstring and mess stuff up!
