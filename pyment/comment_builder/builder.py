@@ -242,17 +242,14 @@ class CommentBuilder(object):
         """
         result = ''
         
-        # When there are sections, put description on same line if first_line=True and auto-generated
-        if self.config.first_line and self.is_auto_generated_name:
-            result += desc + '\n'
+        # When there are sections (parameters/arguments), always put description on a new line
+        result += '\n' + self.config.spaces
+        # Preserve original formatting if description came from existing docstring
+        if self.has_existing_description:
+            # Preserve original line breaks and formatting
+            result += self._with_space(self.description).rstrip() + '\n'
         else:
-            result += '\n' + self.config.spaces
-            # Preserve original formatting if description came from existing docstring
-            if self.has_existing_description:
-                # Preserve original line breaks and formatting
-                result += self._with_space(self.description).rstrip() + '\n'
-            else:
-                result += self._with_space(self.description).strip() + '\n'
+            result += self._with_space(self.description).strip() + '\n'
         
         return result
     

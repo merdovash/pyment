@@ -1,0 +1,16 @@
+--- a/case.py
++++ b/case.py
+@@ -2,6 +2,13 @@
+     """Foo"""
+ 
+     def before_create(self, fltr: sbis.Record):
++        """
++        Before create
++
++        :param fltr: 
++        :type fltr: sbis.Record
++
++        """
+         if fltr.Get("__STUB__"):
+             self._fix_stub_regulation(self._record)
+         else:

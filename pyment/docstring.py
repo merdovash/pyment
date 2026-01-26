@@ -1582,19 +1582,15 @@ class CommentBuilder(object):
                 return raw.rstrip()
         
         # If there are parameters/returns/raises, always put description on a new line
-        # EXCEPT when first_line=True and description is auto-generated - then put it on same line
         if has_sections:
-            # When there are sections, put description on same line if first_line=True and auto-generated
-            if self.config.first_line and self.is_auto_generated_name:
-                raw += desc + '\n'
+            # When there are sections (parameters/arguments), always put description on a new line
+            raw += '\n' + self.config.spaces
+            # Preserve original formatting if description came from existing docstring
+            if self.has_existing_description:
+                # Preserve original line breaks and formatting
+                raw += with_space(self.description).rstrip() + '\n'
             else:
-                raw += '\n' + self.config.spaces
-                # Preserve original formatting if description came from existing docstring
-                if self.has_existing_description:
-                    # Preserve original line breaks and formatting
-                    raw += with_space(self.description).rstrip() + '\n'
-                else:
-                    raw += with_space(self.description).strip() + '\n'
+                raw += with_space(self.description).strip() + '\n'
         elif not self.config.first_line or self.is_auto_generated_name:
             raw += '\n' + self.config.spaces
             raw += with_space(self.description).strip() + '\n'

@@ -55,6 +55,7 @@ ISSUES = [
     ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, True),
     ('case_docs_already_google', 'docs_already_google', {}, False, True),
     ('case_already_good', 'already_good', {}, False, False),
+    ('case_comment_by_name_with_args', 'comment_by_name_with_args', {'description-on-new-line': True}, False, False),
 ]
 
 
