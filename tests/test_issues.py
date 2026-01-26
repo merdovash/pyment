@@ -31,6 +31,7 @@ ISSUES = [
     ('issue58', '58', {}, False, False),
     ('issue69', '69', {}, False, False),
     ('issue83', '83', {'ignore_private': True}, True, False),
+    ('method_scope_public', 'method_scope_public', {'method_scope': ['public']}, True, False),
     ('issue85', '85', {}, False, False),
     ('issue88', '88', {}, False, False),
     ('issue90', '90', {}, False, False),

@@ -1,0 +1,29 @@
+--- a/case.py
++++ b/case.py
+@@ -1,4 +1,5 @@
+ class MyClass:
++    """ MyClass """
+     def public_method(self):
+         """Public method docstring"""
+         pass
+@@ -12,6 +13,19 @@
+         pass
+     
+     def another_public(self, param1, param2=None):
+-        """Another public method"""
++        """
++        Another public method
++
++        Parameters
++        ----------
++        param1 :
++            
++        param2 :
++             (Default value = None)
++
++        Returns
++        -------
++
++        """
+         return param1
+ 
