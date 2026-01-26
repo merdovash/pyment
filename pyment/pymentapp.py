@@ -271,9 +271,8 @@ def main():
                         default=False,
                         help='Place description text on a new line even for single-line docstrings without parameters.')
     parser.add_argument('--method-scope', metavar='scope', dest='method_scope',
-                        action='append',
-                        choices=['public', 'protected', 'private'],
-                        help='Method scope to process: public, protected, or private. Can be specified multiple times (e.g., --method-scope public --method-scope protected). Default processes all methods.')
+                        default=None,
+                        help='Method scope to process: public, protected, or private. Can be specified as a single value (e.g., --method-scope=public) or comma-separated values (e.g., --method-scope=public,protected). Default processes all methods.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -298,11 +297,17 @@ def main():
         # Split by comma and strip whitespace
         exclude = [pattern.strip() for pattern in args.exclude.split(',') if pattern.strip()]
 
-    # Parse method_scope if provided (already a list from argparse append action)
+    # Parse method_scope if provided (comma-separated string)
     method_scope = None
     if args.method_scope:
-        # Normalize to lowercase (choices already validated by argparse)
-        method_scope = [s.lower() for s in args.method_scope]
+        # Split by comma and normalize to lowercase
+        scope_list = [s.strip().lower() for s in args.method_scope.split(',') if s.strip()]
+        # Validate scope values
+        valid_scopes = ['public', 'protected', 'private']
+        invalid_scopes = [s for s in scope_list if s not in valid_scopes]
+        if invalid_scopes:
+            parser.error(f"Invalid method scope(s): {', '.join(invalid_scopes)}. Valid scopes are: {', '.join(valid_scopes)}")
+        method_scope = scope_list
     
     # Convert deprecated ignore_private to method_scope
     tobool = lambda s: True if s.lower() == 'true' else False
