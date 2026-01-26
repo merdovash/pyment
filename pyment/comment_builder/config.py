@@ -10,12 +10,14 @@ class CommentBuilderConfig(object):
     
     __slots__ = (
         'docs_tools', 'spaces', 'quotes', 'before_lim', 'num_of_spaces',
-        'skip_empty', 'first_line', 'trailing_space', 'description_on_new_line'
+        'skip_empty', 'first_line', 'trailing_space', 'description_on_new_line',
+        'show_default_value'
     )
     
     def __init__(self, docs_tools, spaces='', quotes="'''", before_lim='', 
                  num_of_spaces=4, skip_empty=False, first_line=False, 
-                 trailing_space='', description_on_new_line=False):
+                 trailing_space='', description_on_new_line=False,
+                 show_default_value=True):
         """Initialize the configuration.
         
         :param docs_tools: DocsTools instance for style management
@@ -27,6 +29,7 @@ class CommentBuilderConfig(object):
         :param first_line: description starts on first line if True
         :param trailing_space: trailing space to insert
         :param description_on_new_line: put description on new line if True
+        :param show_default_value: include "(Default value = ...)" in parameter descriptions if True
         """
         self.docs_tools = docs_tools
         self.spaces = spaces
@@ -37,4 +40,5 @@ class CommentBuilderConfig(object):
         self.first_line = first_line
         self.trailing_space = trailing_space
         self.description_on_new_line = description_on_new_line
+        self.show_default_value = show_default_value
 

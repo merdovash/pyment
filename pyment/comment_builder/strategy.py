@@ -117,8 +117,11 @@ class NumpydocStrategy(CommentFormatStrategy):
             raw += '\n'
             raw += self.config.spaces + indent_spaces + with_space(p[1]).strip()
             if len(p) > 2:
-                if 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
-                    raw += ' (Default value = ' + str(p[3]) + ')'
+                if self.config.show_default_value and 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
+                    # Add space before default value only if there's a description
+                    desc_stripped = p[1].strip() if p[1] else ''
+                    space_before = ' ' if desc_stripped else ''
+                    raw += space_before + '(Default value = ' + str(p[3]) + ')'
             raw += '\n'
         return raw
     
@@ -235,8 +238,11 @@ class GoogleStrategy(CommentFormatStrategy):
                 raw += ')'
             raw += ': ' + with_space(p[1]).strip()
             if len(p) > 2:
-                if 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
-                    raw += ' (Default value = ' + str(p[3]) + ')'
+                if self.config.show_default_value and 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
+                    # Add space before default value only if there's a description
+                    desc_stripped = p[1].strip() if p[1] else ''
+                    space_before = ' ' if desc_stripped else ''
+                    raw += space_before + '(Default value = ' + str(p[3]) + ')'
             raw += '\n'
         return raw
     
@@ -357,8 +363,11 @@ class DefaultStrategy(CommentFormatStrategy):
             for p in params:
                 raw += self.config.spaces + self.docs_tools.get_key('param', 'out') + ' ' + p[0] + sep + with_space(p[1]).strip()
                 if len(p) > 2:
-                    if 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
-                        raw += ' (Default value = ' + str(p[3]) + ')'
+                    if self.config.show_default_value and 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
+                        # Add space before default value only if there's a description
+                        desc_stripped = p[1].strip() if p[1] else ''
+                        space_before = ' ' if desc_stripped else ''
+                        raw += space_before + '(Default value = ' + str(p[3]) + ')'
                     if p[2] is not None and len(p[2]) > 0:
                         raw += '\n'
                         raw += self.config.spaces + self.docs_tools.get_key('type', 'out') + ' ' + p[0] + sep + p[2]

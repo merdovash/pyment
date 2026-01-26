@@ -142,11 +142,13 @@ def get_config(config_file, encoding='utf-8'):
 
 def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
         init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False, method_scope=None):
+        skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False, method_scope=None,
+        show_default_value=True):
     if input_style == 'auto':
         input_style = None
 
     config = get_config(config_file, encoding=encoding)
+    tobool = lambda s: True if s.lower() == 'true' else False
     if 'init2class' in config:
         init2class = config.pop('init2class')
     if 'convert_only' in config:
@@ -177,6 +179,8 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                 raise ValueError(f"Invalid method scope(s) in config file: {', '.join(invalid_scopes)}. Valid scopes are: {', '.join(valid_scopes)}")
         elif isinstance(method_scope_config, list):
             method_scope = [s.lower() if isinstance(s, str) else s for s in method_scope_config]
+    if 'show_default_value' in config:
+        show_default_value = tobool(config.pop('show_default_value'))
     
     # Track changes across all files
     files_changed = []
@@ -205,6 +209,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                           encoding=encoding,
                           description_on_new_line=description_on_new_line,
                           method_scope=method_scope,
+                          show_default_value=show_default_value,
                           **config)
             c.proceed()
             if init2class:
@@ -315,6 +320,9 @@ def main():
     parser.add_argument('--method-scope', metavar='scope', dest='method_scope',
                         default=None,
                         help='Method scope to process: public, protected, or private. Can be specified as a single value (e.g., --method-scope=public) or comma-separated values (e.g., --method-scope=public,protected). Default processes all methods.')
+    parser.add_argument('--no-show-default-value', action='store_false', dest='show_default_value',
+                        default=True,
+                        help='Do not include "(Default value = ...)" in parameter descriptions.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -489,7 +497,7 @@ def main():
         spaces=args.spaces, skip_empty=args.skip_empty,
         file_comment=args.file_comment, encoding=args.encoding,
         description_on_new_line=args.description_on_new_line,
-        method_scope=method_scope)
+        method_scope=method_scope, show_default_value=args.show_default_value)
     
     sys.stderr.write(f"DEBUG: run() returned has_changes={has_changes}\n")
     sys.stderr.flush()

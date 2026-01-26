@@ -37,7 +37,7 @@ class PyComment(object):
     """
     def __init__(self, input_file, input_style=None, output_style='reST', quotes='"""', first_line=True,
                  convert_only=False, config_file=None, ignore_private=False, num_of_spaces=4, skip_empty=False,
-                 file_comment=False, encoding='utf-8', method_scope=None, **kwargs):
+                 file_comment=False, encoding='utf-8', method_scope=None, show_default_value=True, **kwargs):
         """Sets the configuration including the source to proceed and options.
 
         :param input_file: path name (file or folder)
@@ -58,6 +58,8 @@ class PyComment(object):
         :param method_scope: list of method scopes to process: ['public', 'protected', 'private']. 
           If None, processes all methods (unless ignore_private is True, which will exclude private).
           Public: no leading underscore, Protected: single leading underscore, Private: double leading underscore
+        :param show_default_value: if True, include "(Default value = ...)" in parameter descriptions. Default is True.
+        :type show_default_value: boolean
 
         """
         self.file_type = '.py'
@@ -97,6 +99,7 @@ class PyComment(object):
         self.file_comment = file_comment
         self.encoding = encoding
         self.method_scope = method_scope if method_scope is not None else ['public', 'protected', 'private']
+        self.show_default_value = show_default_value
         self.kwargs = kwargs
         self._has_module_docstring_cache = None
 
@@ -382,6 +385,7 @@ class PyComment(object):
                               first_line=self.first_line,
                               num_of_spaces=self.num_of_spaces,
                               skip_empty=self.skip_empty,
+                              show_default_value=self.show_default_value,
                               **self.kwargs)
                 elem_list.append({'docs': e, 'location': (-i, -i)})
             else:
