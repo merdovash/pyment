@@ -81,7 +81,7 @@ def get_config(config_file, encoding='utf-8'):
                         key, value = line.split("=", 1)
                         key, value = key.strip(), value.strip()
                         if key in ['init2class', 'first_line', 'convert_only', 'file_comment',
-                                   'description_on_new_line']:
+                                   'description_on_new_line', 'type_tags']:
                             value = tobool(value)
                         if key == 'indent':
                             value = int(value)
@@ -94,7 +94,7 @@ def get_config(config_file, encoding='utf-8'):
 def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
         init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
         skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False, method_scope=None,
-        show_default_value=True):
+        show_default_value=True, type_tags=True):
     if input_style == 'auto':
         input_style = None
 
@@ -132,6 +132,8 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             method_scope = [s.lower() if isinstance(s, str) else s for s in method_scope_config]
     if 'show_default_value' in config:
         show_default_value = tobool(config.pop('show_default_value'))
+    if 'type_tags' in config:
+        type_tags = tobool(config.pop('type_tags'))
     
     # Track changes across all files
     files_changed = []
@@ -161,6 +163,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                           description_on_new_line=description_on_new_line,
                           method_scope=method_scope,
                           show_default_value=show_default_value,
+                          type_tags=type_tags,
                           **config)
             c.proceed()
             if init2class:
@@ -267,6 +270,9 @@ def _main():
     parser.add_argument('--no-show-default-value', action='store_false', dest='show_default_value',
                         default=True,
                         help='Do not include "(Default value = ...)" in parameter descriptions.')
+    parser.add_argument('--no-type-tags', action='store_false', dest='type_tags',
+                        default=True,
+                        help='Do not include :type and :rtype: fields in generated docstrings (reST/javadoc styles).')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -415,7 +421,8 @@ def _main():
         spaces=args.spaces, skip_empty=args.skip_empty,
         file_comment=args.file_comment, encoding=args.encoding,
         description_on_new_line=args.description_on_new_line,
-        method_scope=method_scope, show_default_value=args.show_default_value)
+        method_scope=method_scope, show_default_value=args.show_default_value,
+        type_tags=args.type_tags)
     
     # Exit with code 0 if no changes, non-zero if changes were made
     if has_changes:

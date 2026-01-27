@@ -1337,13 +1337,13 @@ class CommentBuilderConfig(object):
     __slots__ = (
         'docs_tools', 'spaces', 'quotes', 'before_lim', 'num_of_spaces',
         'skip_empty', 'first_line', 'trailing_space', 'description_on_new_line',
-        'show_default_value'
+        'show_default_value', 'type_tags'
     )
     
-    def __init__(self, docs_tools, spaces='', quotes="'''", before_lim='', 
-                 num_of_spaces=4, skip_empty=False, first_line=False, 
+    def __init__(self, docs_tools, spaces='', quotes="'''", before_lim='',
+                 num_of_spaces=4, skip_empty=False, first_line=False,
                  trailing_space='', description_on_new_line=False,
-                 show_default_value=True):
+                 show_default_value=True, type_tags=True):
         """Initialize the configuration.
         
         :param docs_tools: DocsTools instance for style management
@@ -1356,6 +1356,9 @@ class CommentBuilderConfig(object):
         :param trailing_space: trailing space to insert
         :param description_on_new_line: put description on new line if True
         :param show_default_value: include "(Default value = ...)" in parameter descriptions if True
+        :param type_tags: include :type and :rtype: fields in generated
+            docstrings when using reST/javadoc-style output. If False, those
+            fields are omitted.
         """
         self.docs_tools = docs_tools
         self.spaces = spaces
@@ -1367,6 +1370,7 @@ class CommentBuilderConfig(object):
         self.trailing_space = trailing_space
         self.description_on_new_line = description_on_new_line
         self.show_default_value = show_default_value
+        self.type_tags = type_tags
 
 
 class CommentBuilder(object):
@@ -1748,7 +1752,8 @@ class DocString(object):
 
     def __init__(self, elem_raw, spaces='', docs_raw=None, quotes="'''", input_style=None, output_style=None,
                  first_line=False, trailing_space=True, type_stub=False, before_lim='', num_of_spaces=4,
-                 skip_empty=False, description_on_new_line=False, show_default_value=True, **kwargs):
+                 skip_empty=False, description_on_new_line=False, show_default_value=True,
+                 type_tags=True, **kwargs):
         """
         :param elem_raw: raw data of the element (def or class).
         :param spaces: the leading whitespaces before the element
@@ -1772,10 +1777,17 @@ class DocString(object):
         :type num_of_spaces: integer
         :param skip_empty: if set, will skip writing the params, returns, or raises if they are empty
         :type skip_empty: boolean
-        :param description_on_new_line: if True, description will be placed on a new line even for single-line docstrings without parameters. Default is False (text on first line).
+        :param description_on_new_line: if True, description will be placed on a new
+          line even for single-line docstrings without parameters. Default is
+          False (text on first line).
         :type description_on_new_line: boolean
-        :param show_default_value: if True, include "(Default value = ...)" in parameter descriptions. Default is True.
+        :param show_default_value: if True, include "(Default value = ...)" in
+          parameter descriptions. Default is True.
         :type show_default_value: boolean
+        :param type_tags: if True (default), include :type and :rtype:
+          fields in generated docstrings when using reST/javadoc-style output.
+          If False, those fields are omitted.
+        :type type_tags: boolean
 
         """
         self.dst = DocsTools()
@@ -1783,6 +1795,7 @@ class DocString(object):
         self.first_line = first_line
         self.description_on_new_line = description_on_new_line
         self.show_default_value = show_default_value
+        self.type_tags = type_tags
         self.trailing_space = ''
         self.type_stub = type_stub
         if trailing_space:
@@ -1859,7 +1872,8 @@ class DocString(object):
             first_line=self.first_line,
             trailing_space=self.trailing_space,
             description_on_new_line=self.description_on_new_line,
-            show_default_value=self.show_default_value
+            show_default_value=self.show_default_value,
+            type_tags=self.type_tags
         )
 
     def __str__(self):

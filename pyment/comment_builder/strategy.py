@@ -368,7 +368,7 @@ class DefaultStrategy(CommentFormatStrategy):
                         desc_stripped = p[1].strip() if p[1] else ''
                         space_before = ' ' if desc_stripped else ''
                         raw += space_before + '(Default value = ' + str(p[3]) + ')'
-                    if p[2] is not None and len(p[2]) > 0:
+                    if self.config.type_tags and p[2] is not None and len(p[2]) > 0:
                         raw += '\n'
                         raw += self.config.spaces + self.docs_tools.get_key('type', 'out') + ' ' + p[0] + sep + p[2]
                 raw += '\n'
@@ -392,7 +392,7 @@ class DefaultStrategy(CommentFormatStrategy):
             if not params:
                 raw += '\n'
             raw += self.config.spaces + self.docs_tools.get_key('return', 'out') + sep + with_space(return_desc.rstrip()).strip() + '\n'
-        if return_type:
+        if self.config.type_tags and return_type:
             if not params:
                 raw += '\n'
             raw += self.config.spaces + self.docs_tools.get_key('rtype', 'out') + sep + return_type.rstrip() + '\n'
