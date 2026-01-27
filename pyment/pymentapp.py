@@ -178,7 +178,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             # Debug: Print change status for this file
             if f != '-':
                 if file_changed:
-                    print(f"DEBUG: Changes detected in {f} on lines {','.join(i for i, (a,b) in enumerate(zip(list_from, list_to)) if a != b)}", file=sys.stderr)
+                    print(f"DEBUG: Changes detected in {f} on lines {','.join(str(i) for i, (a,b) in enumerate(zip(list_from, list_to)) if a != b)}", file=sys.stderr)
                     files_changed.append(f)
                 else:
                     print(f"DEBUG: No changes in {f}", file=sys.stderr)
@@ -199,6 +199,8 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             # Print error message and continue to next file
             if f != '-':
                 print(f"\nError processing {f}: {str(e)}", file=sys.stderr)
+                import traceback
+                traceback.print_exc(file=sys.stderr)
             else:
                 print(f"\nError processing stdin: {str(e)}", file=sys.stderr)
             continue
@@ -213,7 +215,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
     return has_changes
 
 
-def main():   
+def _main():   
     desc = 'Pyment v{0} - {1} - {2} - {3}'.format(__version__, __copyright__, __author__, __licence__)
     parser = argparse.ArgumentParser(description='Generates patches after (re)writing docstrings.')
     parser.add_argument('path', type=str, nargs='*',
@@ -424,6 +426,15 @@ def main():
         sys.stderr.write("DEBUG: Exiting with code 0 (no changes)\n")
         sys.stderr.flush()
         sys.exit(0)
+
+
+def main():
+    try:
+        _main()
+    except Exception as e:
+        print(f"ERROR: {type(e).__name__}: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
 
 
 if __name__ == "__main__":
