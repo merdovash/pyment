@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,101 +1,309 @@
+@@ -1,101 +1,321 @@
  def func(): # comment with (parents):
 +    """Func
 +    """
@@ -29,7 +29,8 @@
  
  
  def func1(param1: str):
-+    """Func1
++    """
++    Func1
 +
 +    Parameters
 +    ----------
@@ -44,7 +45,8 @@
  
  
  def func2(param1: str) -> int:
-+    """Func2
++    """
++    Func2
 +
 +    Parameters
 +    ----------
@@ -81,7 +83,8 @@
  
  
  def func4(param1: str, param2: List[int]):
-+    """Func4
++    """
++    Func4
 +
 +    Parameters
 +    ----------
@@ -98,7 +101,8 @@
  
  
  def func5(param1: str, param2: List[int]) -> Dict[str,Object]:  # yet:(another) comment
-+    """Func5
++    """
++    Func5
 +
 +    Parameters
 +    ----------
@@ -142,7 +146,8 @@
  
  
  def func7(param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
-+    """Func7
++    """
++    Func7
 +
 +    Parameters
 +    ----------
@@ -151,7 +156,7 @@
 +    param2 : Dict[str, Object]
 +        
 +    param3 : int
-+         (Default value = 12)
++        (Default value = 12)
 +
 +    Returns
 +    -------
@@ -161,18 +166,19 @@
  
  
  def func8(param1 : str, param2: list=None, param3: str = "foo", param4="bar") -> str:
-+    """Func8
++    """
++    Func8
 +
 +    Parameters
 +    ----------
 +    param1 : str
 +        
 +    param2 : list
-+         (Default value = None)
++        (Default value = None)
 +    param3 : str
-+         (Default value = "foo")
++        (Default value = "foo")
 +    param4 :
-+         (Default value = "bar")
++        (Default value = "bar")
 +
 +    Returns
 +    -------
@@ -184,16 +190,17 @@
  def func9(param1: str,
            param2: list = None,
            param3: str = "foo") -> str:
-+    """Func9
++    """
++    Func9
 +
 +    Parameters
 +    ----------
 +    param1 : str
 +        
 +    param2 : list
-+         (Default value = None)
++        (Default value = None)
 +    param3 : str
-+         (Default value = "foo")
++        (Default value = "foo")
 +
 +    Returns
 +    -------
@@ -203,16 +210,17 @@
  
  
  def func10(  param1: str = "", param2='', param3=call_func('foobar')  ) :
-+    """Func10
++    """
++    Func10
 +
 +    Parameters
 +    ----------
 +    param1 : str
-+         (Default value = "")
++        (Default value = "")
 +    param2 :
-+         (Default value = '')
++        (Default value = '')
 +    param3 :
-+         (Default value = call_func('foobar'))
++        (Default value = call_func('foobar'))
 +
 +    Returns
 +    -------
@@ -222,7 +230,8 @@
  
  
  def func11(self, param1: str, param2: Dict[str, Object], param3: OAuth2PasswordRequestForm = Depends(), param4: int = 1) -> str:
-+    """Func11
++    """
++    Func11
 +
 +    Parameters
 +    ----------
@@ -231,9 +240,9 @@
 +    param2 : Dict[str, Object]
 +        
 +    param3 : OAuth2PasswordRequestForm
-+         (Default value = Depends())
++        (Default value = Depends())
 +    param4 : int
-+         (Default value = 1)
++        (Default value = 1)
 +
 +    Returns
 +    -------
@@ -243,7 +252,8 @@
  
  
  def func12(cls, param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
-+    """Func12
++    """
++    Func12
 +
 +    Parameters
 +    ----------
@@ -252,7 +262,7 @@
 +    param2 : Dict[str, Object]
 +        
 +    param3 : int
-+         (Default value = 12)
++        (Default value = 12)
 +
 +    Returns
 +    -------
@@ -262,7 +272,8 @@
  
  
  def func13(param1, param2: Dict["str", Object], param3: int = 12) -> str:
-+    """Func13
++    """
++    Func13
 +
 +    Parameters
 +    ----------
@@ -271,7 +282,7 @@
 +    param2 : Dict["str", Object]
 +        
 +    param3 : int
-+         (Default value = 12)
++        (Default value = 12)
 +
 +    Returns
 +    -------
@@ -321,14 +332,15 @@
      class A:
 +        """ A """
          def method(self, param1, param2=None) -> int:
-+            """Method
++            """
++            Method
 +
 +            Parameters
 +            ----------
 +            param1 :
 +                
 +            param2 :
-+                 (Default value = None)
++                (Default value = None)
 +
 +            Returns
 +            -------

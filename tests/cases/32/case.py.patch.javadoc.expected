@@ -1,11 +1,12 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,2 +1,8 @@
+@@ -1,2 +1,9 @@
  def hello_world(a=22, b='hello'):
-+    """Hello world
++    """
++    Hello world
 +
-+    @param a:  (Default value = 22)
-+    @param b:  (Default value = 'hello')
++    @param a: (Default value = 22)
++    @param b: (Default value = 'hello')
 +
 +    """
    return 42

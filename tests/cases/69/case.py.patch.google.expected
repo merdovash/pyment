@@ -9,7 +9,7 @@
 +    Args:
 +        inlier: 
 +        outlier: 
-+        outlier_rgb:  (Default value = [1, 0, 0])
++        outlier_rgb: (Default value = [1, 0, 0])
 +
 +    Returns:
 +

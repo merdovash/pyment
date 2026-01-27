@@ -8,7 +8,7 @@
 +
 +    @param inlier: 
 +    @param outlier: 
-+    @param outlier_rgb:  (Default value = [1, 0, 0])
++    @param outlier_rgb: (Default value = [1, 0, 0])
 +
 +    """
      pass

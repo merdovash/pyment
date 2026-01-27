@@ -377,7 +377,10 @@ class DefaultStrategy(CommentFormatStrategy):
     def format_return_section(self, return_desc, return_type, params):
         """Format return section in default style (javadoc/reST)."""
         raw = ''
-        if self.config.skip_empty and not return_desc:
+        # If skip_empty is set, we still want to emit a :return: line when
+        # there is a return type but type tags are disabled, so treat that
+        # case as non-empty.
+        if self.config.skip_empty and not return_desc and not (return_type and not self.config.type_tags):
             return raw
         
         sep = self.docs_tools.get_sep(target='out')
@@ -392,6 +395,12 @@ class DefaultStrategy(CommentFormatStrategy):
             if not params:
                 raw += '\n'
             raw += self.config.spaces + self.docs_tools.get_key('return', 'out') + sep + with_space(return_desc.rstrip()).strip() + '\n'
+        elif return_type and not self.config.type_tags:
+            # When type tags are disabled but a return type exists (e.g. from
+            # annotations), still emit a :return: line with an empty description.
+            if not params:
+                raw += '\n'
+            raw += self.config.spaces + self.docs_tools.get_key('return', 'out') + sep + '\n'
         if self.config.type_tags and return_type:
             if not params:
                 raw += '\n'

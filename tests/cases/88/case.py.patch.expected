@@ -4,8 +4,8 @@
  def std_func(param="foo", bar=42):
 +    """
 +
-+    :param param:  (Default value = "foo")
-+    :param bar:  (Default value = 42)
++    :param param: (Default value = "foo")
++    :param bar: (Default value = 42)
 +
 +    """
      pass
@@ -14,8 +14,8 @@
  async def async_func(param='foo', bar=42):
 +    """
 +
-+    :param param:  (Default value = 'foo')
-+    :param bar:  (Default value = 42)
++    :param param: (Default value = 'foo')
++    :param bar: (Default value = 42)
 +
 +    """
      return param

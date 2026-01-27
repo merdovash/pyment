@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,20 +1,43 @@
+@@ -1,20 +1,44 @@
  def func(param1=True, param2='default val'):
 -    '''Description of func with docstring groups style.
 +    """
@@ -39,14 +39,15 @@
  class A:
 +    """ A """
      def method(self, param1, param2=None):
-+        """Method
++        """
++        Method
 +
 +        Parameters
 +        ----------
 +        param1 :
 +            
 +        param2 :
-+             (Default value = None)
++            (Default value = None)
 +
 +        Returns
 +        -------

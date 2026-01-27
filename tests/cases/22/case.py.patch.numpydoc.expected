@@ -1,10 +1,11 @@
 --- a/case.py
 +++ b/case.py
-@@ -2,4 +2,15 @@
+@@ -2,4 +2,16 @@
      """Test class for issue 22"""
  
      def __init__(self, param1):
-+        """Initialize
++        """
++        Initialize
 +
 +        Parameters
 +        ----------

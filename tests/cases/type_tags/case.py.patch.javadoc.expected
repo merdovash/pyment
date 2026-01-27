@@ -1,0 +1,15 @@
+--- a/case.py
++++ b/case.py
+@@ -1,4 +1,12 @@
+ def add(a: int, b: int) -> int:
++    """
++    Add
++
++    @param a: 
++    @param b: 
++    @return: 
++
++    """
+     return a + b
+ 
+ 

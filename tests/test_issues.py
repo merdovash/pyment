@@ -20,7 +20,9 @@ _filter_issues = None
 _filter_strategies = None
 _filter_test_type = None
 
-# Issue definitions: (issue_name, folder_name, base_kwargs, use_proceed, expected_failure)
+# all tests is a folder in tests/cases/{folder_name}/case.py
+# expceted patch has prefixes tests/cases/{folder_name}/case.py.patch.{strategy}.expected
+# Issue definitions: (issue_name, folder_name, base_kwargs, use_proceed)
 ISSUES = [
     ('issue9', '9', {}, False, False),
     ('issue10', '10', {}, False, False),
@@ -52,11 +54,12 @@ ISSUES = [
     ('case_free_cases', 'free_cases', {}, False, False),
     ('case_docs_already_rest', 'docs_already_rest', {}, False, False),
     ('case_docs_already_javadoc', 'docs_already_javadoc', {}, False, False),
-    ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, True),
-    ('case_docs_already_google', 'docs_already_google', {}, False, True),
+    ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, False),
+    ('case_docs_already_google', 'docs_already_google', {}, False, False),
     ('case_already_good', 'already_good', {}, False, False),
     ('case_already_good_big', 'already_good_big', {'description_on_new_line': True, 'method_scope': 'public', 'file_comment': True}, False, False),
     ('case_comment_by_name_with_args', 'comment_by_name_with_args', {'description-on-new-line': True}, False, False),
+    ('issue_type_tags', 'type_tags', {'type_tags': False}, False, False),
 ]
 
 
@@ -111,40 +114,33 @@ class IssuesTests(unittest.TestCase):
                                             f'Description mismatch for element {i}')
 
     @parameterized.expand([
-        (f'{issue_name}_{strategy}', folder_name, strategy, base_kwargs, use_proceed, expected_failure)
-        for issue_name, folder_name, base_kwargs, use_proceed, expected_failure in ISSUES
+        (issue_name, folder_name, base_kwargs, use_proceed)
+        for issue_name, folder_name, base_kwargs, use_proceed, _ in ISSUES
         if _should_run_issue(issue_name, folder_name)
-        for strategy in STRATEGIES
     ])
-    def test_full(self, issue_name, folder_name, strategy, base_kwargs, use_proceed, expected_failure):
+    def test_full(self, issue_name, folder_name, base_kwargs, use_proceed):
         """Parameterized test for all issue tests across all strategies"""
         # Runtime filtering
         if _filter_test_type is not None and _filter_test_type != 'full':
             self.skipTest(f'Skipped: test-type filter is {_filter_test_type}')
         if not _should_run_issue(issue_name, folder_name):
             self.skipTest(f'Skipped: issue {issue_name} not in filter')
-        if not _should_run_strategy(strategy):
-            self.skipTest(f'Skipped: strategy {strategy} not in filter')
-        
-        # Create kwargs for this strategy
-        kwargs = base_kwargs.copy()
-        kwargs['output_style'] = strategy
-        
-        # Build file paths
-        file_name = os.path.join('cases', folder_name, 'case.py')
-        expected_file = os.path.join('cases', folder_name, f'case.py.patch.{strategy}.expected')
-        
-        # For expected failures, wrap the test execution
-        if expected_failure:
-            try:
+
+        for strategy in STRATEGIES:
+            with self.subTest(strategy):
+                if not _should_run_strategy(strategy):
+                    self.skipTest(f'Skipped: strategy {strategy} not in filter')
+                
+                # Create kwargs for this strategy
+                kwargs = base_kwargs.copy()
+                kwargs['output_style'] = strategy
+                
+                # Build file paths
+                file_name = os.path.join('cases', folder_name, 'case.py')
+                expected_file = os.path.join('cases', folder_name, f'case.py.patch.{strategy}.expected')
+                
+                # For expected failures, wrap the test execution
                 self._run_test(file_name, expected_file, kwargs, use_proceed)
-                # If we get here, the test passed unexpectedly
-                self.fail("Test passed unexpectedly (was marked as expected failure)")
-            except AssertionError:
-                # Expected failure occurred - this is fine
-                pass
-        else:
-            self._run_test(file_name, expected_file, kwargs, use_proceed)
 
     def _run_test(self, file_name, expected_file, kwargs, use_proceed):
         """Helper method to run the actual test"""

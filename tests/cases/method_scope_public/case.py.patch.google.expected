@@ -16,7 +16,7 @@
 +
 +        Args:
 +            param1: 
-+            param2:  (Default value = None)
++            param2: (Default value = None)
 +
 +        Returns:
 +

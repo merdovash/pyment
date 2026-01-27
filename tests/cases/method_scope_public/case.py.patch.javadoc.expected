@@ -15,7 +15,7 @@
 +        Another public method
 +
 +        @param param1: 
-+        @param param2:  (Default value = None)
++        @param param2: (Default value = None)
 +
 +        """
          return param1

@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,89 +1,239 @@
+@@ -1,89 +1,250 @@
  def func(): # comment with (parents):
 +    """Func
 +    """
@@ -27,7 +27,8 @@
  
  
  def func1(param1: str):
-+    """Func1
++    """
++    Func1
 +
 +    Args:
 +        param1 (str): 
@@ -41,7 +42,8 @@
  
  
  def func2(param1: str) -> int:
-+    """Func2
++    """
++    Func2
 +
 +    Args:
 +        param1 (str): 
@@ -75,7 +77,8 @@
  
  
  def func4(param1: str, param2: List[int]):
-+    """Func4
++    """
++    Func4
 +
 +    Args:
 +        param1 (str): 
@@ -90,7 +93,8 @@
  
  
  def func5(param1: str, param2: List[int]) -> Dict[str,Object]:  # yet:(another) comment
-+    """Func5
++    """
++    Func5
 +
 +    Args:
 +        param1 (str): 
@@ -129,12 +133,13 @@
  
  
  def func7(param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
-+    """Func7
++    """
++    Func7
 +
 +    Args:
 +        param1 (str): 
 +        param2 (Dict[str, Object]): 
-+        param3 (int, optional):  (Default value = 12)
++        param3 (int, optional): (Default value = 12)
 +
 +    Returns:
 +
@@ -145,13 +150,14 @@
  
  
  def func8(param1 : str, param2: list=None, param3: str = "foo", param4="bar") -> str:
-+    """Func8
++    """
++    Func8
 +
 +    Args:
 +        param1 (str): 
-+        param2 (list, optional):  (Default value = None)
-+        param3 (str, optional):  (Default value = "foo")
-+        param4:  (Default value = "bar")
++        param2 (list, optional): (Default value = None)
++        param3 (str, optional): (Default value = "foo")
++        param4: (Default value = "bar")
 +
 +    Returns:
 +
@@ -164,12 +170,13 @@
  def func9(param1: str,
            param2: list = None,
            param3: str = "foo") -> str:
-+    """Func9
++    """
++    Func9
 +
 +    Args:
 +        param1 (str): 
-+        param2 (list, optional):  (Default value = None)
-+        param3 (str, optional):  (Default value = "foo")
++        param2 (list, optional): (Default value = None)
++        param3 (str, optional): (Default value = "foo")
 +
 +    Returns:
 +
@@ -180,12 +187,13 @@
  
  
  def func10(  param1: str = "", param2='', param3=call_func('foobar')  ) :
-+    """Func10
++    """
++    Func10
 +
 +    Args:
-+        param1 (str, optional):  (Default value = "")
-+        param2:  (Default value = '')
-+        param3:  (Default value = call_func('foobar'))
++        param1 (str, optional): (Default value = "")
++        param2: (Default value = '')
++        param3: (Default value = call_func('foobar'))
 +
 +    Returns:
 +
@@ -196,13 +204,14 @@
  
  
  def func11(self, param1: str, param2: Dict[str, Object], param3: OAuth2PasswordRequestForm = Depends(), param4: int = 1) -> str:
-+    """Func11
++    """
++    Func11
 +
 +    Args:
 +        param1 (str): 
 +        param2 (Dict[str, Object]): 
-+        param3 (OAuth2PasswordRequestForm, optional):  (Default value = Depends())
-+        param4 (int, optional):  (Default value = 1)
++        param3 (OAuth2PasswordRequestForm, optional): (Default value = Depends())
++        param4 (int, optional): (Default value = 1)
 +
 +    Returns:
 +
@@ -213,12 +222,13 @@
  
  
  def func12(cls, param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
-+    """Func12
++    """
++    Func12
 +
 +    Args:
 +        param1 (str): 
 +        param2 (Dict[str, Object]): 
-+        param3 (int, optional):  (Default value = 12)
++        param3 (int, optional): (Default value = 12)
 +
 +    Returns:
 +
@@ -229,12 +239,13 @@
  
  
  def func13(param1, param2: Dict["str", Object], param3: int = 12) -> str:
-+    """Func13
++    """
++    Func13
 +
 +    Args:
 +        param1: 
 +        param2 (Dict["str", Object]): 
-+        param3 (int, optional):  (Default value = 12)
++        param3 (int, optional): (Default value = 12)
 +
 +    Returns:
 +
@@ -259,7 +270,7 @@
  
      Returns:
          some value
-@@ -92,10 +242,22 @@
+@@ -92,10 +253,23 @@
          keyError: raises key exception
          TypeError: raises type exception
  
@@ -270,11 +281,12 @@
      class A:
 +        """ A """
          def method(self, param1, param2=None) -> int:
-+            """Method
++            """
++            Method
 +
 +            Args:
 +                param1: 
-+                param2:  (Default value = None)
++                param2: (Default value = None)
 +
 +            Returns:
 +

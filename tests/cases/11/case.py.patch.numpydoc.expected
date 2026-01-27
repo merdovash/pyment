@@ -10,7 +10,7 @@
 +    subject :
 +        
 +    answer :
-+         (Default value = False)
++        (Default value = False)
 +
 +    Returns
 +    -------

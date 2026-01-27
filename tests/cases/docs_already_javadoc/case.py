@@ -1,5 +1,6 @@
 def func1(param1):
-    """Function 1
+    """
+    Function 1
     with 1 param
 
     @param param1: 1st parameter
@@ -11,7 +12,8 @@ def func1(param1):
 
 
 def func2(param1, param2):
-    """Function 2
+    """
+    Function 2
     with 2 params
 
     @param param1: 1st parameter

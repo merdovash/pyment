@@ -1,0 +1,47 @@
+--- a/case.py
++++ b/case.py
+@@ -3,20 +3,11 @@
+     Function 1
+     with 1 param
+ 
+-    Parameters
+-    ----------
+-    param1 : type
+-        1st parameter
+-
+-    Returns
+-    -------
+-    string
+-        a message
+-
+-    Raises
+-    ------
+-    KeyError
+-        when a key error
++    @param param1: 1st parameter
++    @type param1: type
++    @return: a message
++    @rtype: string
++    @raise KeyError: when a key error
+ 
+     """
+     return "huh"
+@@ -27,15 +18,9 @@
+     Function 2
+     with 2 params
+ 
+-    Parameters
+-    ----------
+-    param1 : type
+-        1st parameter
+-    param2 :
+-        2nd parameter
+-
+-    Returns
+-    -------
++    @param param1: 1st parameter
++    @type param1: type
++    @param param2: 2nd parameter
+ 
+     """
+     pass

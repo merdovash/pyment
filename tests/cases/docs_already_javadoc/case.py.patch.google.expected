@@ -1,0 +1,36 @@
+--- a/case.py
++++ b/case.py
+@@ -3,9 +3,13 @@
+     Function 1
+     with 1 param
+ 
+-    @param param1: 1st parameter
+-    @type param1: type
+-    @return: None
++    Args:
++        param1 (type): 1st parameter
++
++    Returns:
++        None
++
++    Raises:
+ 
+     """
+     return None
+@@ -16,9 +20,13 @@
+     Function 2
+     with 2 params
+ 
+-    @param param1: 1st parameter
+-    @type param1: type
+-    @param param2: 2nd parameter
++    Args:
++        param1 (type): 1st parameter
++        param2: 2nd parameter
++
++    Returns:
++
++    Raises:
+ 
+     """
+     pass

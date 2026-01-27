@@ -19,7 +19,7 @@
 +        param1 :
 +            
 +        param2 :
-+             (Default value = None)
++            (Default value = None)
 +
 +        Returns
 +        -------

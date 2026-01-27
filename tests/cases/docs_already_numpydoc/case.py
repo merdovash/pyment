@@ -1,5 +1,6 @@
 def func1(param1):
-    """Function 1
+    """
+    Function 1
     with 1 param
 
     Parameters
@@ -16,12 +17,14 @@ def func1(param1):
     ------
     KeyError
         when a key error
+
     """
     return "huh"
 
 
 def func2(param1, param2):
-    """Function 2
+    """
+    Function 2
     with 2 params
 
     Parameters

@@ -6,7 +6,7 @@
 +    
 +
 +    :param subject: 
-+    :param answer:  (Default value = False)
++    :param answer: (Default value = False)
 +
      >>> meaning('life', answer=True)
      42

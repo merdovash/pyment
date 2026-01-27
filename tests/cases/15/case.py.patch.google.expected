@@ -15,7 +15,7 @@
  
      Returns:
          some value
-@@ -12,9 +13,21 @@
+@@ -12,9 +13,22 @@
          keyError: raises key exception
          TypeError: raises type exception
  
@@ -26,11 +26,12 @@
  class A:
 +    """ A """
      def method(self, param1, param2=None):
-+        """Method
++        """
++        Method
 +
 +        Args:
 +            param1: 
-+            param2:  (Default value = None)
++            param2: (Default value = None)
 +
 +        Returns:
 +

@@ -1,13 +1,14 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,10 +1,47 @@
+@@ -1,10 +1,50 @@
  def func1(param1="""triple double quotes"""):
-+    """Func1
++    """
++    Func1
 +
 +    Parameters
 +    ----------
 +    param1 :
-+         (Default value = 'triple double quotes')
++        (Default value = 'triple double quotes')
 +
 +    Returns
 +    -------
@@ -17,12 +18,13 @@
  
  
  def func2(param1='''triple single quotes'''):
-+    """Func2
++    """
++    Func2
 +
 +    Parameters
 +    ----------
 +    param1 :
-+         (Default value = 'triple single quotes')
++        (Default value = 'triple single quotes')
 +
 +    Returns
 +    -------
@@ -32,16 +34,17 @@
  
  
  def func3(param1="""triple quotes""", param2='''triple single''', param3="normal"):
-+    """Func3
++    """
++    Func3
 +
 +    Parameters
 +    ----------
 +    param1 :
-+         (Default value = 'triple quotes')
++        (Default value = 'triple quotes')
 +    param2 :
-+         (Default value = 'triple single')
++        (Default value = 'triple single')
 +    param3 :
-+         (Default value = "normal")
++        (Default value = "normal")
 +
 +    Returns
 +    -------

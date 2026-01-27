@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,101 +1,223 @@
+@@ -1,101 +1,235 @@
  def func(): # comment with (parents):
 +    """Func
 +    """
@@ -22,7 +22,8 @@
  
  
  def func1(param1: str):
-+    """Func1
++    """
++    Func1
 +
 +    @param param1: 
 +    @type param1: str
@@ -32,7 +33,8 @@
  
  
  def func2(param1: str) -> int:
-+    """Func2
++    """
++    Func2
 +
 +    @param param1: 
 +    @type param1: str
@@ -60,7 +62,8 @@
  
  
  def func4(param1: str, param2: List[int]):
-+    """Func4
++    """
++    Func4
 +
 +    @param param1: 
 +    @type param1: str
@@ -72,7 +75,8 @@
  
  
  def func5(param1: str, param2: List[int]) -> Dict[str,Object]:  # yet:(another) comment
-+    """Func5
++    """
++    Func5
 +
 +    @param param1: 
 +    @type param1: str
@@ -107,13 +111,14 @@
  
  
  def func7(param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
-+    """Func7
++    """
++    Func7
 +
 +    @param param1: 
 +    @type param1: str
 +    @param param2: 
 +    @type param2: Dict[str, Object]
-+    @param param3:  (Default value = 12)
++    @param param3: (Default value = 12)
 +    @type param3: int
 +    @rtype: str
 +
@@ -122,15 +127,16 @@
  
  
  def func8(param1 : str, param2: list=None, param3: str = "foo", param4="bar") -> str:
-+    """Func8
++    """
++    Func8
 +
 +    @param param1: 
 +    @type param1: str
-+    @param param2:  (Default value = None)
++    @param param2: (Default value = None)
 +    @type param2: list
-+    @param param3:  (Default value = "foo")
++    @param param3: (Default value = "foo")
 +    @type param3: str
-+    @param param4:  (Default value = "bar")
++    @param param4: (Default value = "bar")
 +    @rtype: str
 +
 +    """
@@ -140,13 +146,14 @@
  def func9(param1: str,
            param2: list = None,
            param3: str = "foo") -> str:
-+    """Func9
++    """
++    Func9
 +
 +    @param param1: 
 +    @type param1: str
-+    @param param2:  (Default value = None)
++    @param param2: (Default value = None)
 +    @type param2: list
-+    @param param3:  (Default value = "foo")
++    @param param3: (Default value = "foo")
 +    @type param3: str
 +    @rtype: str
 +
@@ -155,27 +162,29 @@
  
  
  def func10(  param1: str = "", param2='', param3=call_func('foobar')  ) :
-+    """Func10
++    """
++    Func10
 +
-+    @param param1:  (Default value = "")
++    @param param1: (Default value = "")
 +    @type param1: str
-+    @param param2:  (Default value = '')
-+    @param param3:  (Default value = call_func('foobar'))
++    @param param2: (Default value = '')
++    @param param3: (Default value = call_func('foobar'))
 +
 +    """
      pass
  
  
  def func11(self, param1: str, param2: Dict[str, Object], param3: OAuth2PasswordRequestForm = Depends(), param4: int = 1) -> str:
-+    """Func11
++    """
++    Func11
 +
 +    @param param1: 
 +    @type param1: str
 +    @param param2: 
 +    @type param2: Dict[str, Object]
-+    @param param3:  (Default value = Depends())
++    @param param3: (Default value = Depends())
 +    @type param3: OAuth2PasswordRequestForm
-+    @param param4:  (Default value = 1)
++    @param param4: (Default value = 1)
 +    @type param4: int
 +    @rtype: str
 +
@@ -184,13 +193,14 @@
  
  
  def func12(cls, param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
-+    """Func12
++    """
++    Func12
 +
 +    @param param1: 
 +    @type param1: str
 +    @param param2: 
 +    @type param2: Dict[str, Object]
-+    @param param3:  (Default value = 12)
++    @param param3: (Default value = 12)
 +    @type param3: int
 +    @rtype: str
 +
@@ -199,12 +209,13 @@
  
  
  def func13(param1, param2: Dict["str", Object], param3: int = 12) -> str:
-+    """Func13
++    """
++    Func13
 +
 +    @param param1: 
 +    @param param2: 
 +    @type param2: Dict["str", Object]
-+    @param param3:  (Default value = 12)
++    @param param3: (Default value = 12)
 +    @type param3: int
 +    @rtype: str
 +
@@ -243,10 +254,11 @@
      class A:
 +        """ A """
          def method(self, param1, param2=None) -> int:
-+            """Method
++            """
++            Method
 +
 +            @param param1: 
-+            @param param2:  (Default value = None)
++            @param param2: (Default value = None)
 +            @rtype: int
 +
 +            """

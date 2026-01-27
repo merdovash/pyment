@@ -1,21 +1,23 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,21 +1,37 @@
+@@ -1,21 +1,39 @@
  def std_func(param="foo", bar=42):
-+    """Std func
++    """
++    Std func
 +
-+    @param param:  (Default value = "foo")
-+    @param bar:  (Default value = 42)
++    @param param: (Default value = "foo")
++    @param bar: (Default value = 42)
 +
 +    """
      pass
  
  
  async def async_func(param='foo', bar=42):
-+    """Async func
++    """
++    Async func
 +
-+    @param param:  (Default value = 'foo')
-+    @param bar:  (Default value = 42)
++    @param param: (Default value = 'foo')
++    @param bar: (Default value = 42)
 +
 +    """
      return param

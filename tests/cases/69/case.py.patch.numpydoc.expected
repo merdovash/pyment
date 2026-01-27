@@ -13,7 +13,7 @@
 +    outlier :
 +        
 +    outlier_rgb :
-+         (Default value = [1, 0, 0])
++        (Default value = [1, 0, 0])
 +
 +    Returns
 +    -------

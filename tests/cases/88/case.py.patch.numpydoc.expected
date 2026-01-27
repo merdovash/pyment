@@ -1,15 +1,16 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,21 +1,58 @@
+@@ -1,21 +1,60 @@
  def std_func(param="foo", bar=42):
-+    """Std func
++    """
++    Std func
 +
 +    Parameters
 +    ----------
 +    param :
-+         (Default value = "foo")
++        (Default value = "foo")
 +    bar :
-+         (Default value = 42)
++        (Default value = 42)
 +
 +    Returns
 +    -------
@@ -19,14 +20,15 @@
  
  
  async def async_func(param='foo', bar=42):
-+    """Async func
++    """
++    Async func
 +
 +    Parameters
 +    ----------
 +    param :
-+         (Default value = 'foo')
++        (Default value = 'foo')
 +    bar :
-+         (Default value = 42)
++        (Default value = 42)
 +
 +    Returns
 +    -------
