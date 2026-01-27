@@ -16,3 +16,4 @@ case.py.patch.google.actual
 case.py.patch.javadoc.actual
 case.py.patch.reST.actual
 case.py.patch.numpydoc.actual
+tmp*.patch

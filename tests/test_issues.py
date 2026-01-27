@@ -55,6 +55,7 @@ ISSUES = [
     ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, True),
     ('case_docs_already_google', 'docs_already_google', {}, False, True),
     ('case_already_good', 'already_good', {}, False, False),
+    ('case_already_good_big', 'already_good_big', {'description_on_new_line': True, 'method_scope': 'public', 'file_comment': True}, False, False),
     ('case_comment_by_name_with_args', 'comment_by_name_with_args', {'description-on-new-line': True}, False, False),
 ]
 
@@ -178,6 +179,10 @@ class IssuesTests(unittest.TestCase):
         if 'params' in file_name:
             expected = self._remove_diff_header(expected)
             result = self._remove_diff_header(result)
+
+        with self.subTest('Status'):
+            list_from, list_to = p.compute_before_after()
+            self.assertEqual(expected == '', list_from == list_to)
         
         # Compare
         actual_file = expected_file.replace('.expected', '.actual')

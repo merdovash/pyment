@@ -3,9 +3,6 @@
 
 # VERY EARLY DEBUG - this should be visible if the script is executed at all
 import sys
-sys.stderr.write("DEBUG: pymentapp.py module loading started\n")
-sys.stderr.flush()
-
 import glob
 import argparse
 import os
@@ -14,9 +11,6 @@ import warnings
 
 from pyment import PyComment
 from pyment import __version__, __copyright__, __author__, __licence__
-
-sys.stderr.write("DEBUG: pymentapp.py module loaded successfully\n")
-sys.stderr.flush()
 
 
 MAX_DEPTH_RECUR = 50
@@ -66,49 +60,6 @@ def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions
             if not should_exclude:
                 file_list.append(f)
     return file_list
-
-
-def print_processing_progress(filename, pycomment_obj, file_comment, is_folder=False):
-    """Print the processing actions for a file with detailed action counts.
-    Note: filename should be printed before calling this function.
-    
-    @param filename: the file being processed
-    @param pycomment_obj: the PyComment object that processed the file
-    @param file_comment: whether file comment feature is enabled
-    @param is_folder: whether processing a folder (affects when to print)
-    """
-    if filename == '-':
-        return
-    
-    # Count different types of actions (docstrings processed)
-    num_classes = 0
-    num_functions = 0
-    num_file = 0
-    
-    for e in pycomment_obj.docs_list:
-        if e['docs'].element.get('deftype') == 'class':
-            num_classes += 1
-        elif e['docs'].element.get('deftype') == 'def':
-            num_functions += 1
-    
-    # Check if file docstring was added (use cached result)
-    if file_comment and not pycomment_obj._has_module_docstring():
-        num_file = 1
-    
-    # Build action list
-    actions = []
-    if num_file > 0:
-        actions.append("{0} file docstring".format(num_file))
-    if num_classes > 0:
-        actions.append("{0} class docstring(s)".format(num_classes))
-    if num_functions > 0:
-        actions.append("{0} function docstring(s)".format(num_functions))
-    
-    # Print actions on the same line (filename was already printed)
-    if actions:
-        print(": {0}".format(", ".join(actions)))
-    else:
-        print(": no actions applied")
 
 
 def get_config(config_file, encoding='utf-8'):
@@ -215,9 +166,6 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             if init2class:
                 c.docs_init_to_class()
 
-            # Print processing actions on the same line
-            print_processing_progress(f, c, file_comment, is_folder=os.path.isdir(source))
-
             # Compute before/after to detect changes (used for both overwrite and patch modes)
             list_from, list_to = c.compute_before_after()
             file_changed = list_from != list_to
@@ -230,7 +178,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             # Debug: Print change status for this file
             if f != '-':
                 if file_changed:
-                    print(f"DEBUG: Changes detected in {f}", file=sys.stderr)
+                    print(f"DEBUG: Changes detected in {f} on lines {','.join(i for i, (a,b) in enumerate(zip(list_from, list_to)) if a != b)}", file=sys.stderr)
                     files_changed.append(f)
                 else:
                     print(f"DEBUG: No changes in {f}", file=sys.stderr)
@@ -258,20 +206,14 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
     # Debug: Print summary of changes
     print("DEBUG: Summary of changes:", file=sys.stderr)
     if files_changed:
-        print(f"DEBUG:   {len(files_changed)} file(s) changed: {', '.join(files_changed)}", file=sys.stderr)
+        print(f"DEBUG:   {len(files_changed)} file(s) changed", file=sys.stderr)
     else:
         print("DEBUG:   No files changed", file=sys.stderr)
     
     return has_changes
 
 
-def main():
-    # Debug: Print arguments passed to the script - this should be the FIRST thing
-    # Force flush to ensure output is visible even if process exits early
-    sys.stderr.write("DEBUG: Pyment hook started\n")
-    sys.stderr.write(f"DEBUG: Script arguments (sys.argv): {sys.argv}\n")
-    sys.stderr.flush()
-    
+def main():   
     desc = 'Pyment v{0} - {1} - {2} - {3}'.format(__version__, __copyright__, __author__, __licence__)
     parser = argparse.ArgumentParser(description='Generates patches after (re)writing docstrings.')
     parser.add_argument('path', type=str, nargs='*',
@@ -328,9 +270,6 @@ def main():
 
     args = parser.parse_args()
     
-    sys.stderr.write(f"DEBUG: After parsing arguments\n")
-    sys.stderr.flush()
-    
     # Handle paths: support both single path (backward compatibility) and multiple paths (pre-commit hook)
     paths = args.path if args.path else []
     
@@ -339,8 +278,6 @@ def main():
     
     # If no paths provided, show error
     if not paths:
-        sys.stderr.write("DEBUG: No paths provided, showing error\n")
-        sys.stderr.flush()
         parser.error("the following arguments are required: path")
     
     # Parse extensions if provided
@@ -390,19 +327,6 @@ def main():
             # If method_scope explicitly includes private but ignore_private is True,
             # remove private from the list
             method_scope = [s for s in method_scope if s != 'private']
-
-    # Debug: Print parsed arguments
-    sys.stderr.write("DEBUG: Parsed arguments:\n")
-    sys.stderr.write(f"DEBUG:   paths: {paths}\n")
-    sys.stderr.write(f"DEBUG:   input: {args.input}\n")
-    sys.stderr.write(f"DEBUG:   output: {args.output}\n")
-    sys.stderr.write(f"DEBUG:   extensions: {extensions}\n")
-    sys.stderr.write(f"DEBUG:   exclude: {exclude}\n")
-    sys.stderr.write(f"DEBUG:   overwrite: {args.overwrite}\n")
-    sys.stderr.write(f"DEBUG:   file_comment: {args.file_comment}\n")
-    sys.stderr.write(f"DEBUG:   description_on_new_line: {args.description_on_new_line}\n")
-    sys.stderr.write(f"DEBUG:   method_scope: {method_scope}\n")
-    sys.stderr.flush()
     
     # Helper function to check if a file should be included
     def should_include_file(filepath):
@@ -428,8 +352,6 @@ def main():
             all_files.append(path)
         # If path is a file, add it directly after filtering
         elif os.path.isfile(path):
-            sys.stderr.write(f"DEBUG: Found file: {path}\n")
-            sys.stderr.flush()
             if should_include_file(path):
                 sys.stderr.write(f"DEBUG: File passed filters, adding to list: {path}\n")
                 sys.stderr.flush()
@@ -456,9 +378,6 @@ def main():
             seen.add(f)
             files.append(f)
     
-    # Debug: Print files that will be processed
-    sys.stderr.write("DEBUG: Files to be processed:\n")
-    sys.stderr.flush()
     if files:
         for f in files:
             sys.stderr.write(f"DEBUG:   - {f}\n")
@@ -486,9 +405,6 @@ def main():
     else:
         # For multiple paths, we'll use empty string and let run() handle it
         source = ''
-
-    sys.stderr.write(f"DEBUG: About to call run() with {len(files)} file(s)\n")
-    sys.stderr.flush()
     
     has_changes = run(source, files, args.input, args.output,
         tobool(args.first_line), args.quotes,
@@ -498,9 +414,6 @@ def main():
         file_comment=args.file_comment, encoding=args.encoding,
         description_on_new_line=args.description_on_new_line,
         method_scope=method_scope, show_default_value=args.show_default_value)
-    
-    sys.stderr.write(f"DEBUG: run() returned has_changes={has_changes}\n")
-    sys.stderr.flush()
     
     # Exit with code 0 if no changes, non-zero if changes were made
     if has_changes:
