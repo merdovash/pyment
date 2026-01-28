@@ -1,12 +1,11 @@
     
     def func():
-        """
-        First line
-
+        """First line
+        
         Args:
 
         Returns:
-            ret type: smthg
+          ret type: smthg
 
         Raises:
 

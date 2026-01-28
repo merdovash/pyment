@@ -1,0 +1,26 @@
+[
+    {
+        "name": "ContractStore",
+        "deftype": "class",
+        "input_style": "google",
+        "description": "Some desciption"
+    },
+    {
+        "name": "__init__",
+        "deftype": "def",
+        "input_style": "google",
+        "description": "Initialize"
+    },
+    {
+        "name": "clear",
+        "deftype": "def",
+        "input_style": "google",
+        "description": "Foo"
+    },
+    {
+        "name": "get_contract",
+        "deftype": "def",
+        "input_style": "reST",
+        "description": "Some desciption"
+    }
+]

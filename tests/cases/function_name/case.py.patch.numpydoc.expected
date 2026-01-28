@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,10 +1,42 @@
+@@ -1,10 +1,40 @@
  def calculate_total_sum(a, b):
 +    """
 +    Calculate total sum
@@ -38,8 +38,6 @@
  class UserAccountManager:
 +    """ UserAccountManager """
      def __init__(self):
-+        """Initialize
-+
-+        """
++        """Initialize"""
          pass
  

@@ -1,15 +1,11 @@
     
     def func():
-        """
-        First line
+        """First line
 
-        Args:
-
-        Returns:
-            ret type: smthg
-
-        Raises:
-
+        :returns: smthg
+        
+        :rtype: ret type
+        
         """
         pass
 

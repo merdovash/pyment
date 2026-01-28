@@ -8,13 +8,13 @@
   {
     "name": "A",
     "deftype": "class",
-    "input_style": "javadoc",
+    "input_style": "groups",
     "description": ""
   },
   {
     "name": "method",
     "deftype": "def",
-    "input_style": "javadoc",
+    "input_style": "groups",
     "description": ""
   }
 ]

@@ -1,8 +1,7 @@
 --- a/case.py
 +++ b/case.py
  def func1():
-+    """Func1
-+    """
++    """Func1"""
      pass
  
  

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Strategy pattern implementation for docstring formatting styles."""
+from pyment.configs import CaseConfig
 
 
 class CommentFormatStrategy(object):
@@ -10,6 +11,11 @@ class CommentFormatStrategy(object):
     Strategies encapsulate the formatting logic for different docstring styles
     (google, numpydoc, javadoc, reST, groups, etc.).
     """
+
+    def __init__(self, config, case_config):
+        """Initialize with CommentBuilderConfig instance."""
+        self.config = config
+        self.case_config = case_config
     
     def get_key_section_header(self, key, spaces):
         """Get the formatted section header for a given key.
@@ -73,13 +79,9 @@ class CommentFormatStrategy(object):
 class NumpydocStrategy(CommentFormatStrategy):
     """Strategy for NumPy-style docstring formatting."""
     
-    def __init__(self, config):
-        """Initialize with CommentBuilderConfig instance.
-        
-        :param config: CommentBuilderConfig instance
-        """
-        self.config = config
-        self.tools = config.docs_tools.numpydoc
+    def __init__(self, config, case_config):
+        super().__init__(config, case_config)
+        self.tools = config.dst.numpydoc
     
     def get_key_section_header(self, key, spaces):
         """Get NumPy-style section header."""
@@ -104,18 +106,27 @@ class NumpydocStrategy(CommentFormatStrategy):
             return raw
         
         indent_spaces = ' ' * self.config.num_of_spaces
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + indent_spaces + l.lstrip() if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                stripped = l.lstrip()
+                if not stripped and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + indent_spaces + stripped)
+            return '\n'.join(lines)
         
-        raw += self.get_key_section_header('param', self.config.spaces)
+        raw += self.get_key_section_header('param', self.case_config.spaces)
         for p in params:
-            raw += self.config.spaces + p[0] + ' :'
+            raw += self.case_config.spaces + p[0] + ' :'
             if p[2] is not None and len(p[2]) > 0:
                 raw += ' ' + p[2]
             raw += '\n'
-            raw += self.config.spaces + indent_spaces + with_space(p[1]).strip()
+            raw += self.case_config.spaces + indent_spaces + with_space(p[1]).strip()
             if len(p) > 2:
                 if self.config.show_default_value and 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
                     # Add space before default value only if there's a description
@@ -133,12 +144,21 @@ class NumpydocStrategy(CommentFormatStrategy):
         
         raw += '\n'
         indent_spaces = ' ' * self.config.num_of_spaces
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + indent_spaces + l.lstrip() if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                stripped = l.lstrip()
+                if not stripped and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + indent_spaces + stripped)
+            return '\n'.join(lines)
         
-        raw += self.get_key_section_header('return', self.config.spaces)
+        raw += self.get_key_section_header('return', self.case_config.spaces)
         if return_type:
             rtype = return_type
         else:
@@ -152,17 +172,17 @@ class NumpydocStrategy(CommentFormatStrategy):
                     rtype = ret_elem[2]
                     if rtype is None:
                         rtype = ''
-                    raw += self.config.spaces
+                    raw += self.case_config.spaces
                     if ret_elem[0]:
                         raw += ret_elem[0] + ' : '
-                    raw += rtype + '\n' + self.config.spaces + indent_spaces + with_space(ret_elem[1]).strip() + '\n'
+                    raw += rtype + '\n' + self.case_config.spaces + indent_spaces + with_space(ret_elem[1]).strip() + '\n'
                 else:
-                    raw += self.config.spaces + rtype + '\n'
-                    raw += self.config.spaces + indent_spaces + with_space(str(ret_elem)).strip() + '\n'
+                    raw += self.case_config.spaces + rtype + '\n'
+                    raw += self.case_config.spaces + indent_spaces + with_space(str(ret_elem)).strip() + '\n'
         # case of a unique return
         elif return_desc is not None:
-            raw += self.config.spaces + rtype
-            raw += '\n' + self.config.spaces + indent_spaces + with_space(return_desc).strip() + '\n'
+            raw += self.case_config.spaces + rtype
+            raw += '\n' + self.case_config.spaces + indent_spaces + with_space(return_desc).strip() + '\n'
         return raw
     
     def format_raises_section(self, raises, params, return_desc):
@@ -176,15 +196,24 @@ class NumpydocStrategy(CommentFormatStrategy):
             if 'raise' in self.get_mandatory_sections() or \
                     (raises and 'raise' in self.get_optional_sections()):
                 indent_spaces = ' ' * self.config.num_of_spaces
-                with_space = lambda s: '\n'.join([
-                    self.config.spaces + indent_spaces + l.lstrip() if i > 0 else l
-                    for i, l in enumerate(s.splitlines())
-                ])
-                raw += self.get_key_section_header('raise', self.config.spaces)
+
+                def with_space(s):
+                    lines = []
+                    for i, l in enumerate(s.splitlines()):
+                        if i == 0:
+                            lines.append(l)
+                            continue
+                        stripped = l.lstrip()
+                        if not stripped and not self.config.indent_empty_lines:
+                            lines.append('')
+                        else:
+                            lines.append(self.case_config.spaces + indent_spaces + stripped)
+                    return '\n'.join(lines)
+                raw += self.get_key_section_header('raise', self.case_config.spaces)
                 if len(raises):
                     for p in raises:
-                        raw += self.config.spaces + p[0] + '\n'
-                        raw += self.config.spaces + indent_spaces + with_space(p[1]).strip() + '\n'
+                        raw += self.case_config.spaces + p[0] + '\n'
+                        raw += self.case_config.spaces + indent_spaces + with_space(p[1]).strip() + '\n'
                 raw += '\n'
         return raw
 
@@ -192,13 +221,13 @@ class NumpydocStrategy(CommentFormatStrategy):
 class GoogleStrategy(CommentFormatStrategy):
     """Strategy for Google-style docstring formatting."""
     
-    def __init__(self, config):
+    def __init__(self, config, case_config):
         """Initialize with CommentBuilderConfig instance.
         
         :param config: CommentBuilderConfig instance
         """
-        self.config = config
-        self.tools = config.docs_tools.googledoc
+        super().__init__(config, case_config)
+        self.tools = config.dst.googledoc
     
     def get_key_section_header(self, key, spaces):
         """Get Google-style section header."""
@@ -223,14 +252,23 @@ class GoogleStrategy(CommentFormatStrategy):
             return raw
         
         indent_spaces = ' ' * self.config.num_of_spaces
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + l.lstrip() if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                stripped = l.lstrip()
+                if not stripped and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + stripped)
+            return '\n'.join(lines)
         
-        raw += self.get_key_section_header('param', self.config.spaces)
+        raw += self.get_key_section_header('param', self.case_config.spaces)
         for p in params:
-            raw += self.config.spaces + indent_spaces + p[0]
+            raw += self.case_config.spaces + indent_spaces + p[0]
             if p[2] is not None and len(p[2]) > 0:
                 raw += ' (' + p[2]
                 if len(p) > 3 and p[3] is not None:
@@ -254,12 +292,21 @@ class GoogleStrategy(CommentFormatStrategy):
         
         raw += '\n'
         indent_spaces = ' ' * self.config.num_of_spaces
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + indent_spaces + l.lstrip() if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                stripped = l.lstrip()
+                if not stripped and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + indent_spaces + stripped)
+            return '\n'.join(lines)
         
-        raw += self.get_key_section_header('return', self.config.spaces)
+        raw += self.get_key_section_header('return', self.case_config.spaces)
         if return_type:
             rtype = return_type
         else:
@@ -273,21 +320,21 @@ class GoogleStrategy(CommentFormatStrategy):
                     rtype = ret_elem[2]
                     if rtype is None:
                         rtype = ''
-                    raw += self.config.spaces + indent_spaces
+                    raw += self.case_config.spaces + indent_spaces
                     raw += rtype + ': ' + with_space(ret_elem[1]).strip() + '\n'
                 else:
                     if rtype:
-                        raw += self.config.spaces + indent_spaces + rtype + ': '
+                        raw += self.case_config.spaces + indent_spaces + rtype + ': '
                         raw += with_space(str(ret_elem)).strip() + '\n'
                     else:
-                        raw += self.config.spaces + indent_spaces + with_space(str(ret_elem)).strip() + '\n'
+                        raw += self.case_config.spaces + indent_spaces + with_space(str(ret_elem)).strip() + '\n'
         # case of a unique return
         elif return_desc is not None:
             if rtype:
-                raw += self.config.spaces + indent_spaces + rtype + ': '
+                raw += self.case_config.spaces + indent_spaces + rtype + ': '
                 raw += with_space(return_desc).strip() + '\n'
             else:
-                raw += self.config.spaces + indent_spaces + with_space(return_desc).strip() + '\n'
+                raw += self.case_config.spaces + indent_spaces + with_space(return_desc).strip() + '\n'
         return raw
     
     def format_raises_section(self, raises, params, return_desc):
@@ -301,14 +348,23 @@ class GoogleStrategy(CommentFormatStrategy):
             if 'raise' in self.get_mandatory_sections() or \
                     (raises and 'raise' in self.get_optional_sections()):
                 indent_spaces = ' ' * self.config.num_of_spaces
-                with_space = lambda s: '\n'.join([
-                    self.config.spaces + indent_spaces + l.lstrip() if i > 0 else l
-                    for i, l in enumerate(s.splitlines())
-                ])
-                raw += self.get_key_section_header('raise', self.config.spaces)
+
+                def with_space(s):
+                    lines = []
+                    for i, l in enumerate(s.splitlines()):
+                        if i == 0:
+                            lines.append(l)
+                            continue
+                        stripped = l.lstrip()
+                        if not stripped and not self.config.indent_empty_lines:
+                            lines.append('')
+                        else:
+                            lines.append(self.case_config.spaces + indent_spaces + stripped)
+                    return '\n'.join(lines)
+                raw += self.get_key_section_header('raise', self.case_config.spaces)
                 if len(raises):
                     for p in raises:
-                        raw += self.config.spaces + indent_spaces
+                        raw += self.case_config.spaces + indent_spaces
                         if p[0] is not None:
                             raw += p[0] + ': '
                         if p[1]:
@@ -320,14 +376,14 @@ class GoogleStrategy(CommentFormatStrategy):
 
 class DefaultStrategy(CommentFormatStrategy):
     """Default strategy for javadoc, reST, and groups styles."""
-    
-    def __init__(self, config):
+
+    def __init__(self, config, case_config):
         """Initialize with CommentBuilderConfig instance.
-        
+
         :param config: CommentBuilderConfig instance
         """
-        self.config = config
-        self.docs_tools = config.docs_tools
+        super().__init__(config, case_config)
+        self.docs_tools = config.dst
     
     def get_key_section_header(self, key, spaces):
         """Get default section header (empty for default styles)."""
@@ -354,14 +410,21 @@ class DefaultStrategy(CommentFormatStrategy):
         sep = self.docs_tools.get_sep(target='out')
         sep = sep + ' ' if sep != ' ' else sep
         
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + l if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                if not l.strip() and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + l)
+            return '\n'.join(lines)
         
         if len(params):
             for p in params:
-                raw += self.config.spaces + self.docs_tools.get_key('param', 'out') + ' ' + p[0] + sep + with_space(p[1]).strip()
+                raw += self.case_config.spaces + self.docs_tools.get_key('param', 'out') + ' ' + p[0] + sep + with_space(p[1]).strip()
                 if len(p) > 2:
                     if self.config.show_default_value and 'default' not in p[1].lower() and len(p) > 3 and p[3] is not None:
                         # Add space before default value only if there's a description
@@ -370,7 +433,7 @@ class DefaultStrategy(CommentFormatStrategy):
                         raw += space_before + '(Default value = ' + str(p[3]) + ')'
                     if self.config.type_tags and p[2] is not None and len(p[2]) > 0:
                         raw += '\n'
-                        raw += self.config.spaces + self.docs_tools.get_key('type', 'out') + ' ' + p[0] + sep + p[2]
+                        raw += self.case_config.spaces + self.docs_tools.get_key('type', 'out') + ' ' + p[0] + sep + p[2]
                 raw += '\n'
         return raw
     
@@ -386,25 +449,32 @@ class DefaultStrategy(CommentFormatStrategy):
         sep = self.docs_tools.get_sep(target='out')
         sep = sep + ' ' if sep != ' ' else sep
         
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + l if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                if not l.strip() and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + l)
+            return '\n'.join(lines)
         
         if return_desc:
             if not params:
                 raw += '\n'
-            raw += self.config.spaces + self.docs_tools.get_key('return', 'out') + sep + with_space(return_desc.rstrip()).strip() + '\n'
+            raw += self.case_config.spaces + self.docs_tools.get_key('return', 'out') + sep + with_space(return_desc.rstrip()).strip() + '\n'
         elif return_type and not self.config.type_tags:
             # When type tags are disabled but a return type exists (e.g. from
             # annotations), still emit a :return: line with an empty description.
             if not params:
                 raw += '\n'
-            raw += self.config.spaces + self.docs_tools.get_key('return', 'out') + sep + '\n'
+            raw += self.case_config.spaces + self.docs_tools.get_key('return', 'out') + sep + '\n'
         if self.config.type_tags and return_type:
             if not params:
                 raw += '\n'
-            raw += self.config.spaces + self.docs_tools.get_key('rtype', 'out') + sep + return_type.rstrip() + '\n'
+            raw += self.case_config.spaces + self.docs_tools.get_key('rtype', 'out') + sep + return_type.rstrip() + '\n'
         return raw
     
     def format_raises_section(self, raises, params, return_desc):
@@ -416,16 +486,23 @@ class DefaultStrategy(CommentFormatStrategy):
         sep = self.docs_tools.get_sep(target='out')
         sep = sep + ' ' if sep != ' ' else sep
         
-        with_space = lambda s: '\n'.join([
-            self.config.spaces + l if i > 0 else l
-            for i, l in enumerate(s.splitlines())
-        ])
+        def with_space(s):
+            lines = []
+            for i, l in enumerate(s.splitlines()):
+                if i == 0:
+                    lines.append(l)
+                    continue
+                if not l.strip() and not self.config.indent_empty_lines:
+                    lines.append('')
+                else:
+                    lines.append(self.case_config.spaces + l)
+            return '\n'.join(lines)
         
         if len(raises):
             if not params and not return_desc:
                 raw += '\n'
             for p in raises:
-                raw += self.config.spaces + self.docs_tools.get_key('raise', 'out') + ' '
+                raw += self.case_config.spaces + self.docs_tools.get_key('raise', 'out') + ' '
                 if p[0] is not None:
                     raw += p[0] + sep
                 if p[1]:
@@ -437,13 +514,13 @@ class DefaultStrategy(CommentFormatStrategy):
 
 class GroupsStrategy(CommentFormatStrategy):
     """Strategy for groups-style docstring formatting."""
-    
-    def __init__(self, config):
+
+    def __init__(self, config, case_config):
         """Initialize with CommentBuilderConfig instance.
-        
+
         :param config: CommentBuilderConfig instance
         """
-        self.config = config
+        super().__init__(config, case_config)
         self.docs_tools = config.docs_tools
     
     def get_key_section_header(self, key, spaces):
@@ -475,7 +552,7 @@ class GroupsStrategy(CommentFormatStrategy):
         return ''
 
 
-def create_strategy(style_name, config):
+def create_strategy(style_name, config, case_config: CaseConfig):
     """Factory function to create the appropriate strategy based on style name.
     
     :param style_name: the output style name ('numpydoc', 'google', 'javadoc', 'reST', 'groups')
@@ -483,12 +560,12 @@ def create_strategy(style_name, config):
     :return: CommentFormatStrategy instance
     """
     if style_name == 'numpydoc':
-        return NumpydocStrategy(config)
+        return NumpydocStrategy(config, case_config)
     elif style_name == 'google':
-        return GoogleStrategy(config)
+        return GoogleStrategy(config, case_config)
     elif style_name == 'groups':
-        return GroupsStrategy(config)
+        return GroupsStrategy(config, case_config)
     else:
         # Default for javadoc, reST, etc.
-        return DefaultStrategy(config)
+        return DefaultStrategy(config, case_config)
 

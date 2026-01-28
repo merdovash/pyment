@@ -1,9 +1,8 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,46 +1,91 @@
+@@ -1,46 +1,90 @@
  def func(): # comment with (parents):
-+    """Func
-+    """
++    """Func"""
      pass
  
  
@@ -96,7 +95,7 @@
      :returns: the message
      :rtype: str
  
-@@ -49,53 +94,142 @@
+@@ -49,53 +93,142 @@
  
  
  def func7(param1: str, param2: Dict[str, Object], param3: int = 12) -> str:

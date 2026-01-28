@@ -2,19 +2,19 @@
   {
     "name": "std_func",
     "deftype": "def",
-    "input_style": "javadoc",
+    "input_style": "reST",
     "description": ""
   },
   {
     "name": "async_func",
     "deftype": "def",
-    "input_style": "javadoc",
+    "input_style": "reST",
     "description": ""
   },
   {
     "name": "async_func2",
     "deftype": "def",
-    "input_style": "javadoc",
+    "input_style": "reST",
     "description": ""
   },
   {

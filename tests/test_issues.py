@@ -9,11 +9,20 @@ import sys
 import pyment.pyment as pym
 from parameterized import parameterized
 
+from pyment.configs import CommentBuilderConfig, ReadConfig, ActionConfig
+from pyment.docstring import DocString
+from pyment.utils import from_dict
+
 current_dir = os.path.dirname(__file__)
 absdir = lambda f: os.path.join(current_dir, f)
 
 # All supported strategies
-STRATEGIES = ['javadoc', 'reST', 'google', 'numpydoc']
+STRATEGIES = [
+    'google',
+    'javadoc',
+    'numpydoc',
+    'reST',
+]
 
 # Global filter variables (set by command-line arguments)
 _filter_issues = None
@@ -34,7 +43,7 @@ ISSUES = [
     ('issue32', '32', {}, False, False),
     ('issue34', '34', {}, False, True),
     ('issue46', '46', {}, False, False),
-    ('issue47', '47', {}, False, True),
+    ('issue47', '47', {'first_line': True}, False, True),
     ('issue49', '49', {}, False, False),
     ('issue51', '51', {}, False, False),
     ('issue58', '58', {}, False, False),
@@ -56,10 +65,13 @@ ISSUES = [
     ('case_docs_already_javadoc', 'docs_already_javadoc', {}, False, False),
     ('case_docs_already_numpydoc', 'docs_already_numpydoc', {}, False, False),
     ('case_docs_already_google', 'docs_already_google', {}, False, False),
-    ('case_already_good', 'already_good', {}, False, False),
+    ('case_already_good', 'already_good', {'skip_empty': True}, False, False),
     ('case_already_good_big', 'already_good_big', {'description_on_new_line': True, 'method_scope': 'public', 'file_comment': True}, False, False),
     ('case_comment_by_name_with_args', 'comment_by_name_with_args', {'description-on-new-line': True}, False, False),
     ('issue_type_tags', 'type_tags', {'type_tags': False}, False, False),
+    ('issue_no_params', 'no_params', {'type_tags': False, 'description_on_new_line': True, 'method_scope': 'public',}, False, False),
+    ('', 'without_indent', {'type_tags': False, 'description_on_new_line': True, 'indent_empty_lines': False}, False, False),
+    ('', 'with_indent', {'type_tags': False, 'description_on_new_line': True, 'indent_empty_lines': True}, False, False),
 ]
 
 
@@ -114,17 +126,17 @@ class IssuesTests(unittest.TestCase):
                                             f'Description mismatch for element {i}')
 
     @parameterized.expand([
-        (issue_name, folder_name, base_kwargs, use_proceed)
+        (folder_name, base_kwargs, use_proceed)
         for issue_name, folder_name, base_kwargs, use_proceed, _ in ISSUES
         if _should_run_issue(issue_name, folder_name)
     ])
-    def test_full(self, issue_name, folder_name, base_kwargs, use_proceed):
+    def test_full(self, folder_name, base_kwargs, use_proceed):
         """Parameterized test for all issue tests across all strategies"""
         # Runtime filtering
         if _filter_test_type is not None and _filter_test_type != 'full':
             self.skipTest(f'Skipped: test-type filter is {_filter_test_type}')
-        if not _should_run_issue(issue_name, folder_name):
-            self.skipTest(f'Skipped: issue {issue_name} not in filter')
+        if not _should_run_issue(folder_name, folder_name):
+            self.skipTest(f'Skipped: issue {folder_name} not in filter')
 
         for strategy in STRATEGIES:
             with self.subTest(strategy):
@@ -158,9 +170,13 @@ class IssuesTests(unittest.TestCase):
                 expected = "".join(expected_lines[2:])
         except Exception as e:
             self.fail('Raised exception reading expected file: "{0}"'.format(e))
-        
+
+        comment_config = from_dict(CommentBuilderConfig, kwargs)
+        read_config = from_dict(ReadConfig, kwargs)
+        action_config = from_dict(ActionConfig, kwargs)
+
         # Run PyComment
-        p = pym.PyComment(absdir(file_name), **kwargs)
+        p = pym.PyComment(absdir(file_name), comment_config, read_config, action_config)
         if use_proceed:
             p.proceed()
         else:
@@ -221,43 +237,44 @@ class IssuesTests(unittest.TestCase):
 
     def _extract_calculated_specs(self, file_name, base_kwargs):
         """Extract specs from parsed file (same as in generate_specs.py)"""
-        try:
-            # Parse the file
-            p = pym.PyComment(absdir(file_name), **base_kwargs)
-            p._parse()
-            
-            if not p.parsed:
-                return None
-            
-            # Extract specs for each element
-            specs = []
-            for elem in p.docs_list:
-                if elem is None:
-                    continue
-                
-                # Get the DocString object
-                docstring = elem.get('docs')
-                if docstring is None:
-                    continue
-                
-                # Parse the docstring if not already parsed
-                if not docstring.parsed_docs:
-                    docstring.parse_docs()
-                
-                # Extract information
-                spec = {
-                    'name': docstring.element.get('name', ''),
-                    'deftype': docstring.element.get('deftype', ''),
-                    'input_style': docstring.get_input_style() or 'auto',
-                    'description': docstring.docs['in']['desc'].strip() if docstring.docs['in']['desc'] else ''
-                }
-                
-                specs.append(spec)
-            
-            return specs if specs else None
-            
-        except Exception as e:
-            self.fail(f'Failed to extract specs from {file_name}: {e}')
+        # Parse the file
+        comment_config = from_dict(CommentBuilderConfig, base_kwargs)
+        read_config = from_dict(ReadConfig, base_kwargs)
+        action_config = from_dict(ActionConfig, base_kwargs)
+        # Run PyComment
+        p = pym.PyComment(absdir(file_name), comment_config, read_config, action_config)
+        p._parse()
+
+        if not p.parsed:
+            return None
+
+        # Extract specs for each element
+        specs = []
+        for elem in p.docs_list:
+            if elem is None:
+                continue
+
+            # Get the DocString object
+            docstring: DocString = elem.get('docs')
+            if docstring is None:
+                continue
+
+            # Parse the docstring if not already parsed
+            if not docstring.parsed_docs:
+                docstring.parse_docs()
+
+            # Extract information
+            spec = {
+                'name': docstring.element.name,
+                'deftype': docstring.element.deftype,
+                'input_style': docstring.get_input_style() or 'auto',
+                'description': docstring.docs['in']['desc'].strip() if docstring.docs['in']['desc'] else ''
+            }
+
+            specs.append(spec)
+
+        return specs if specs else None
+
 
 
 def parse_arguments():

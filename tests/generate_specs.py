@@ -78,8 +78,8 @@ def extract_specs(issue_name, folder_name, base_kwargs):
             
             # Extract information
             spec = {
-                'name': docstring.element.get('name', ''),
-                'deftype': docstring.element.get('deftype', ''),
+                'name': docstring.element.name,
+                'deftype': docstring.element.deftype,
                 'input_style': docstring.get_input_style() or 'auto',
                 'description': docstring.docs['in']['desc'].strip() if docstring.docs['in']['desc'] else ''
             }

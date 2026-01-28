@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,21 +1,53 @@
+@@ -1,21 +1,52 @@
  def std_func(param="foo", bar=42):
 +    """
 +    Std func
@@ -34,8 +34,7 @@
  
  
  async def async_func2():
-+    """Async func2
-+    """
++    """Async func2"""
      raise Exception
  
  

@@ -11,7 +11,7 @@ import warnings
 
 from pyment import PyComment
 from pyment import __version__, __copyright__, __author__, __licence__
-
+from pyment.configs import CommentBuilderConfig, ReadConfig, ActionConfig
 
 MAX_DEPTH_RECUR = 50
 ''' The maximum depth to reach while recursively exploring sub folders'''
@@ -81,7 +81,7 @@ def get_config(config_file, encoding='utf-8'):
                         key, value = line.split("=", 1)
                         key, value = key.strip(), value.strip()
                         if key in ['init2class', 'first_line', 'convert_only', 'file_comment',
-                                   'description_on_new_line', 'type_tags']:
+                                   'description_on_new_line', 'type_tags', 'indent_empty_lines']:
                             value = tobool(value)
                         if key == 'indent':
                             value = int(value)
@@ -91,54 +91,54 @@ def get_config(config_file, encoding='utf-8'):
     return config
 
 
-def run(source, files=[], input_style='auto', output_style='reST', first_line=True, quotes='"""',
-        init2class=False, convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False, file_comment=False, encoding='utf-8', description_on_new_line=False, method_scope=None,
-        show_default_value=True, type_tags=True):
+def run(source, files=[], input_style='auto', output_style='reST', first_line=True,
+        convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
+        skip_empty=False, encoding='utf-8',):
     if input_style == 'auto':
         input_style = None
 
     config = get_config(config_file, encoding=encoding)
     tobool = lambda s: True if s.lower() == 'true' else False
-    if 'init2class' in config:
-        init2class = config.pop('init2class')
     if 'convert_only' in config:
         convert = config.pop('convert_only')
-    if 'quotes' in config:
-        quotes = config.pop('quotes')
     if 'input_style' in config:
         input_style = config.pop('input_style')
     if 'output_style' in config:
         output_style = config.pop('output_style')
     if 'first_line' in config:
         first_line = config.pop('first_line')
-    if 'description_on_new_line' in config:
-        description_on_new_line = config.pop('description_on_new_line')
-    if 'file_comment' in config:
-        file_comment = config.pop('file_comment')
     if 'encoding' in config:
         encoding = config.pop('encoding')
-    if 'method_scope' in config:
-        method_scope_config = config.pop('method_scope')
-        # Parse method_scope from config file (comma-separated string or already a list)
-        if isinstance(method_scope_config, str):
-            method_scope = [s.strip().lower() for s in method_scope_config.split(',') if s.strip()]
-            # Validate config file values
-            valid_scopes = ['public', 'protected', 'private']
-            invalid_scopes = [s for s in method_scope if s not in valid_scopes]
-            if invalid_scopes:
-                raise ValueError(f"Invalid method scope(s) in config file: {', '.join(invalid_scopes)}. Valid scopes are: {', '.join(valid_scopes)}")
-        elif isinstance(method_scope_config, list):
-            method_scope = [s.lower() if isinstance(s, str) else s for s in method_scope_config]
-    if 'show_default_value' in config:
-        show_default_value = tobool(config.pop('show_default_value'))
-    if 'type_tags' in config:
-        type_tags = tobool(config.pop('type_tags'))
     
     # Track changes across all files
     files_changed = []
     has_changes = False
-    
+
+    comment_config = CommentBuilderConfig(
+        num_of_spaces=spaces,
+        quotes=config.pop('quotes') or '"""',
+        first_line=first_line,
+        skip_empty=skip_empty,
+        description_on_new_line=config.pop('description_on_new_line'),
+        show_default_value=tobool(config.pop('show_default_value')) or True,
+        indent_empty_lines=tobool(config.pop('indent_empty_lines')),
+        ignore_private=ignore_private,
+        file_comment=config.pop('file_comment') or True,
+        init2class=config.pop('init2class') or True,
+        method_scope=config.pop('method_scope') or (
+            ['public', 'protected'] if ignore_private else ['public', 'protected', 'private']),
+        type_tags=tobool(config.pop('type_tags')) or True,
+        output_style=output_style,
+    )
+
+    read_config = ReadConfig(
+        encoding=encoding or 'utf-8',
+    )
+
+    action_config = ActionConfig(
+        convert_only=convert,
+    )
+
     for f in files:
         try:
             if os.path.isdir(source):
@@ -149,24 +149,16 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             # Print filename before processing
             if f != '-':
                 print(f)
-            
-            c = PyComment(f, quotes=quotes,
-                          input_style=input_style,
-                          output_style=output_style,
-                          first_line=first_line,
-                          ignore_private=ignore_private,
-                          convert_only=convert,
-                          num_of_spaces=spaces,
-                          skip_empty=skip_empty,
-                          file_comment=file_comment,
-                          encoding=encoding,
-                          description_on_new_line=description_on_new_line,
-                          method_scope=method_scope,
-                          show_default_value=show_default_value,
-                          type_tags=type_tags,
-                          **config)
+
+            c = PyComment(
+                f,
+                comment_config=comment_config,
+                read_config=read_config,
+                action_config=action_config,
+                input_style=input_style,
+            )
             c.proceed()
-            if init2class:
+            if comment_config.init2class:
                 c.docs_init_to_class()
 
             # Compute before/after to detect changes (used for both overwrite and patch modes)
@@ -273,6 +265,10 @@ def _main():
     parser.add_argument('--no-type-tags', action='store_false', dest='type_tags',
                         default=True,
                         help='Do not include :type and :rtype: fields in generated docstrings (reST/javadoc styles).')
+    parser.add_argument('--empty-lines-zero', action='store_true',
+                        dest='empty_lines_zero',
+                        default=False,
+                        help='Format completely empty lines in generated docstrings at zero indentation level instead of the comment indentation level.')
     # parser.add_argument('-c', '--config', metavar='config_file',
     #                   dest='config', help='Configuration file')
 
@@ -414,6 +410,8 @@ def _main():
         # For multiple paths, we'll use empty string and let run() handle it
         source = ''
     
+    indent_empty_lines = not args.empty_lines_zero
+
     has_changes = run(source, files, args.input, args.output,
         tobool(args.first_line), args.quotes,
         args.init2class, args.convert, config_file,
@@ -422,7 +420,7 @@ def _main():
         file_comment=args.file_comment, encoding=args.encoding,
         description_on_new_line=args.description_on_new_line,
         method_scope=method_scope, show_default_value=args.show_default_value,
-        type_tags=args.type_tags)
+        type_tags=args.type_tags, indent_empty_lines=indent_empty_lines)
     
     # Exit with code 0 if no changes, non-zero if changes were made
     if has_changes:

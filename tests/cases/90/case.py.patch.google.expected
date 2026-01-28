@@ -1,9 +1,8 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,17 +1,29 @@
+@@ -1,17 +1,27 @@
  def foo():
-+    """Foo
-+    """
++    """Foo"""
      __doc__ = """\
      Foo"""
  
@@ -30,6 +29,5 @@
  
  
  def no_docs():
-+    """No docs
-+    """
++    """No docs"""
      something = '''bla bla bla'''

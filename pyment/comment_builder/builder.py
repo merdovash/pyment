@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-from .config import CommentBuilderConfig
+from .strategy import CommentFormatStrategy
+from ..configs import CommentBuilderConfig, CaseConfig
 
 
 class CommentBuilder(object):
@@ -11,18 +11,19 @@ class CommentBuilder(object):
     """
     
     __slots__ = (
-        'config', 'strategy', 'description', 'params', 'return_desc', 'return_type', 'raises',
+        'config', 'case_config', 'strategy', 'description', 'params', 'return_desc', 'return_type', 'raises',
         'post', 'doctests', 'element_name', 'input_raw',
         'is_auto_generated_name', 'has_existing_description'
     )
     
-    def __init__(self, config, strategy):
+    def __init__(self, config: CommentBuilderConfig, case_config: CaseConfig, strategy: CommentFormatStrategy):
         """Initialize the builder with configuration and strategy.
         
         :param config: CommentBuilderConfig instance containing all configuration
         :param strategy: CommentFormatStrategy instance for formatting
         """
         self.config = config
+        self.case_config = case_config
         self.strategy = strategy
         
         # Data to build (set by setters)
@@ -174,14 +175,24 @@ class CommentBuilder(object):
         :param text: text to indent
         :return: indented text
         """
-        return '\n'.join([self.config.spaces + l if i > 0 else l for i, l in enumerate(text.splitlines())])
+        lines = []
+        for i, l in enumerate(text.splitlines()):
+            if i == 0:
+                lines.append(l)
+                continue
+            # For completely empty lines, optionally leave them at zero level
+            if not l.strip() and not self.config.indent_empty_lines:
+                lines.append('')
+            else:
+                lines.append(self.case_config.spaces + l)
+        return '\n'.join(lines)
     
     def _build_docstring_start(self):
         """Build the initial docstring opening with quotes.
         
         :return: opening string with quotes
         """
-        return self.config.spaces + self.config.before_lim + self.config.quotes
+        return self.case_config.spaces + self.config.before_lim + self.config.quotes
     
     def _build_single_line_docstring(self, desc):
         """Build a single-line docstring without sections.
@@ -193,8 +204,8 @@ class CommentBuilder(object):
         
         if self.config.description_on_new_line:
             # Put description on its own line and close on a new line as well
-            raw += '\n' + self.config.spaces + (desc if desc else self.config.trailing_space)
-            raw += '\n' + self.config.spaces + self.config.quotes
+            raw += '\n' + self.case_config.spaces + (desc if desc else self.config.trailing_space)
+            raw += '\n' + self.case_config.spaces + self.config.quotes
         elif self.is_auto_generated_name and self._should_use_one_line_format_with_spaces():
             # For classes with only class name, always use one-line format with spaces
             raw += ' ' + desc + ' ' + self.config.quotes
@@ -202,9 +213,9 @@ class CommentBuilder(object):
             # For auto-generated descriptions with first_line=True, put description on same line
             raw += desc if desc else self.config.trailing_space
             if self.element_name == '__init__':
-                raw += '\n\n' + self.config.spaces + self.config.quotes
+                raw += '\n\n' + self.case_config.spaces + self.config.quotes
             else:
-                raw += '\n' + self.config.spaces + self.config.quotes
+                raw += '\n' + self.case_config.spaces + self.config.quotes
         else:
             # Keep it on one line with triple quotes
             raw += desc if desc else self.config.trailing_space
@@ -221,7 +232,7 @@ class CommentBuilder(object):
         raw = self._build_docstring_start()
         
         if not self.config.first_line:
-            raw += '\n' + self.config.spaces
+            raw += '\n' + self.case_config.spaces
         
         # Preserve original formatting if description came from existing docstring
         if self.has_existing_description:
@@ -230,7 +241,7 @@ class CommentBuilder(object):
             raw += self._with_space(self.description).strip() + '\n'
         
         if raw.count(self.config.quotes) == 1:
-            raw += self.config.spaces + self.config.quotes
+            raw += self.case_config.spaces + self.config.quotes
         
         return raw.rstrip()
     
@@ -243,7 +254,7 @@ class CommentBuilder(object):
         result = ''
         
         # When there are sections (parameters/arguments), always put description on a new line
-        result += '\n' + self.config.spaces
+        result += '\n' + self.case_config.spaces
         # Preserve original formatting if description came from existing docstring
         if self.has_existing_description:
             # Preserve original line breaks and formatting
@@ -261,10 +272,10 @@ class CommentBuilder(object):
         result = ''
         
         if self.post:
-            result += self.config.spaces + self._with_space(self.post).strip() + '\n'
+            result += self.case_config.spaces + self._with_space(self.post).strip() + '\n'
         
         if self.doctests:
-            result += self.config.spaces + self._with_space(self.doctests).strip() + '\n'
+            result += self.case_config.spaces + self._with_space(self.doctests).strip() + '\n'
         
         return result
     
@@ -275,7 +286,7 @@ class CommentBuilder(object):
         :return: docstring with closing quotes
         """
         if raw.count(self.config.quotes) == 1:
-            raw += self.config.spaces + self.config.quotes
+            raw += self.case_config.spaces + self.config.quotes
         return raw.rstrip()
         
     def build(self):
@@ -283,7 +294,7 @@ class CommentBuilder(object):
         
         :return: complete docstring string
         """
-        sep = self.config.docs_tools.get_sep(target='out')
+        sep = self.config.dst.get_sep(target='out')
         sep = sep + ' ' if sep != ' ' else sep
         
         raw = self._build_docstring_start()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .config import CommentBuilderConfig
+from ..configs import CommentBuilderConfig
 from .builder import CommentBuilder
 from .function import FunctionCommentBuilder
 from .class_ import ClassCommentBuilder
@@ -15,7 +15,6 @@ from .strategy import (
 )
 
 __all__ = [
-    'CommentBuilderConfig',
     'CommentBuilder',
     'FunctionCommentBuilder',
     'ClassCommentBuilder',

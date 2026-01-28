@@ -1,9 +1,8 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,89 +1,250 @@
+@@ -1,89 +1,249 @@
  def func(): # comment with (parents):
-+    """Func
-+    """
++    """Func"""
      pass
  
  
@@ -270,7 +269,7 @@
  
      Returns:
          some value
-@@ -92,10 +253,23 @@
+@@ -92,10 +252,23 @@
          keyError: raises key exception
          TypeError: raises type exception
  

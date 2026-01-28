@@ -1,9 +1,8 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,101 +1,235 @@
+@@ -1,101 +1,234 @@
  def func(): # comment with (parents):
-+    """Func
-+    """
++    """Func"""
      pass
  
  

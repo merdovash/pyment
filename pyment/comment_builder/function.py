@@ -3,18 +3,14 @@
 from .builder import CommentBuilder
 
 
+MAGIC_METHODS = {
+    '__init__': 'Initialize',
+    '__str__': 'Convert to string',
+}
+
+
 class FunctionCommentBuilder(CommentBuilder):
     """Builder for function docstrings."""
-    
-    __slots__ = ()  # Inherits all slots from CommentBuilder
-    
-    def __init__(self, config, strategy):
-        """Initialize function comment builder.
-        
-        :param config: CommentBuilderConfig instance
-        :param strategy: CommentFormatStrategy instance
-        """
-        super(FunctionCommentBuilder, self).__init__(config, strategy)
     
     def _format_name_as_description(self, name):
         """Format function name as a description by splitting into words and capitalizing first word.
@@ -37,13 +33,11 @@ class FunctionCommentBuilder(CommentBuilder):
         # Handle special methods like __init__, __str__, etc.
         if name.startswith('__') and name.endswith('__'):
             # Remove leading and trailing underscores
-            inner = name[2:-2]
-            if inner:
-                # For __init__, return "Initialize", for others capitalize first letter
-                if inner == 'init':
-                    return 'Initialize'
+            return MAGIC_METHODS.get(
+                name,
                 # Capitalize first letter
-                return inner[0].upper() + inner[1:].lower()
+                name[2].upper() + name[3:-2].lower()
+            )
             return name
         
         # Split on underscores first

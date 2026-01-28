@@ -9,6 +9,7 @@ import subprocess
 import warnings
 
 from .docstring import DocString
+from .configs import CommentBuilderConfig, ReadConfig, ActionConfig, CaseConfig
 
 __author__ = "A. Daouzli"
 __copyright__ = "Copyright 2012-2021, A. Daouzli; Copyright 2026, V. Schekochihin"
@@ -35,78 +36,32 @@ class PyComment(object):
     The changes are then provided in a patch file.
 
     """
-    def __init__(self, input_file, input_style=None, output_style='reST', quotes='"""', first_line=True,
-                 convert_only=False, config_file=None, ignore_private=False, num_of_spaces=4, skip_empty=False,
-                 file_comment=False, encoding='utf-8', method_scope=None, show_default_value=True,
-                 type_tags=True, **kwargs):
+    def __init__(self,
+                 input_file,
+                 comment_config:
+                 CommentBuilderConfig,
+                 read_config: ReadConfig,
+                 action_config: ActionConfig,
+                 input_style=None,
+                 ):
         """Sets the configuration including the source to proceed and options.
 
         :param input_file: path name (file or folder)
         :param input_style: the type of doctrings format of the output. By default, it will
           autodetect the format for each docstring.
-        :param output_style: the docstring docstyle to generate ('javadoc', 'reST', 'groups', 'numpydoc', 'google').
-        :param quotes: the type of quotes to use for output: ' ' ' or " " " (default " " ")
-        :param first_line: indicate if description should start on first or second line. By default it is True
-        :type first_line: boolean
-        :param convert_only: if set only existing docstring will be converted. No missing docstring will be created.
-        :param config_file: if given configuration file for Pyment
-        :param ignore_private: [DEPRECATED] don't proceed the private methods/functions starting with __ (two underscores).
-          Use method_scope instead. This parameter will be removed in a future version.
-        :param num_of_spaces: the number of spaces for a tab on output
-        :param skip_empty: if set, will not write the params, returns, or raises sections if they are empty
-        :param file_comment: if set, will add a file comment with the file name at the beginning of the file
-        :param encoding: the encoding to use when reading and writing files (default 'utf-8')
-        :param method_scope: list of method scopes to process: ['public', 'protected', 'private']. 
-          If None, processes all methods (unless ignore_private is True, which will exclude private).
-          Public: no leading underscore, Protected: single leading underscore, Private: double leading underscore
-        :param show_default_value: if True, include "(Default value = ...)" in parameter descriptions. Default is True.
-        :type show_default_value: boolean
-        :param type_tags: if True (default), include :type and :rtype:
-          fields in generated docstrings when using reST/javadoc-style output.
-          If False, those fields are omitted.
-        :type type_tags: boolean
-
         """
+        self.comment_config = comment_config
+        self.read_config = read_config
+        self.action_config = action_config
         self.file_type = '.py'
-        self.first_line = first_line
         self.filename_list = []
         self.input_file = input_file
         self.input_lines = []  # Need to remember the file when reading off stdin
         self.input_style = input_style
-        self.output_style = output_style
         self.doc_index = -1
         self.file_index = 0
         self.docs_list = []
         self.parsed = False
-        self.quotes = quotes
-        self.convert_only = convert_only
-        self.config_file = config_file
-        
-        # Handle deprecated ignore_private parameter
-        if ignore_private:
-            warnings.warn(
-                "The 'ignore_private' parameter is deprecated and will be removed in a future version. "
-                "Use 'method_scope' instead. For example, use method_scope=['public', 'protected'] instead of ignore_private=True.",
-                DeprecationWarning,
-                stacklevel=2
-            )
-            # Convert ignore_private to method_scope
-            if method_scope is None:
-                method_scope = ['public', 'protected']  # Exclude private
-            elif 'private' in method_scope:
-                # If method_scope explicitly includes private but ignore_private is True,
-                # remove private from the list
-                method_scope = [s for s in method_scope if s != 'private']
-        
-        self.ignore_private = ignore_private  # Keep for backward compatibility in _should_process_method
-        self.num_of_spaces = num_of_spaces
-        self.skip_empty = skip_empty
-        self.file_comment = file_comment
-        self.encoding = encoding
-        self.method_scope = method_scope if method_scope is not None else ['public', 'protected', 'private']
-        self.show_default_value = show_default_value
-        self.type_tags = type_tags
-        self.kwargs = kwargs
         self._has_module_docstring_cache = None
 
     def _get_git_first_commit_author(self, filepath):
@@ -296,9 +251,9 @@ class PyComment(object):
         
         """
         # Check against method_scope filter
-        if self.method_scope:
+        if self.comment_config.method_scope:
             scope = self._get_method_scope(method_name)
-            return scope in self.method_scope
+            return scope in self.comment_config.method_scope
         
         return True
 
@@ -320,12 +275,13 @@ class PyComment(object):
         start = 0
         end = 0
         before_lim = ""
+        name_part = ''
 
         try:
             if self.input_file == '-':
                 fd = sys.stdin
             else:
-                fd = open(self.input_file, 'r', encoding=self.encoding)
+                fd = open(self.input_file, 'r', encoding=self.read_config.encoding)
 
             self.input_lines = fd.readlines()
 
@@ -361,7 +317,7 @@ class PyComment(object):
                         # (See issue #83).
                         waiting_docs = False
                         continue
-                elif self.ignore_private and l[l.find(' '):].strip().startswith("__"):
+                elif l[l.find(' '):].strip().startswith("__") and 'private' not in self.comment_config.method_scope:
                     # For classes, maintain backward compatibility with ignore_private
                     # If we were still looking for the class docstring, stop
                     # looking.  Otherwise we'll mistake this __dunder_method__
@@ -373,7 +329,7 @@ class PyComment(object):
                 elem = l
                 m = re.match(r'^(\s*)[adc]', ln)  # a for async, d for def, c for class
                 if m is not None and m.group(1) is not None:
-                    spaces = m.group(1)
+                    spaces: str = m.group(1)
                 else:
                     spaces = ''
                 # the end of definition should be ':' and eventually a comment following
@@ -385,15 +341,18 @@ class PyComment(object):
                 # if currently reading an element content
                 waiting_docs = True
                 # *** Creates the DocString object ***
-                e = DocString(elem.replace('\n', ' '), spaces, quotes=self.quotes,
-                              input_style=self.input_style,
-                              output_style=self.output_style,
-                              first_line=self.first_line,
-                              num_of_spaces=self.num_of_spaces,
-                              skip_empty=self.skip_empty,
-                              show_default_value=self.show_default_value,
-                              type_tags=self.type_tags,
-                              **self.kwargs)
+                case_config = CaseConfig(
+                    spaces=spaces + ' ' * 4,
+                    name=name_part,
+                    type='def' if is_method else 'class',
+                    raw=elem.replace('\n', ' '),
+                )
+                e = DocString(
+                    elem.replace('\n', ' '),
+                    comment_config=self.comment_config,
+                    case_config=case_config,
+                    input_style=self.input_style,
+                    )
                 elem_list.append({'docs': e, 'location': (-i, -i)})
             else:
                 if waiting_docs and ('"""' in l or "'''" in l):
@@ -455,7 +414,7 @@ class PyComment(object):
                 else:
                     if reading_docs is not None:
                         raw += ln
-        if self.convert_only:
+        if self.action_config.convert_only:
             i = 0
             while i < len(elem_list):
                 if elem_list[i]['docs'].get_input_docstring() is None:
@@ -526,7 +485,7 @@ class PyComment(object):
         list_to = []
         
         # Add file comment at the beginning if flag is set and no module docstring exists
-        if self.file_comment and not self._has_module_docstring():
+        if self.comment_config.file_comment and not self._has_module_docstring():
             if self.input_file != '-':
                 filename = os.path.basename(self.input_file)
                 # Remove extension from filename
@@ -535,12 +494,12 @@ class PyComment(object):
                 # Try to get git author of first commit
                 author = self._get_git_first_commit_author(self.input_file)
                 if author:
-                    file_comment_lines = '{0}\n{1}\nAuthor: {2}\n{0}'.format(self.quotes, filename, author)
+                    file_comment_lines = '{0}\n{1}\nAuthor: {2}\n{0}'.format(self.comment_config.quotes, filename, author)
                 else:
-                    file_comment_lines = '{0}\n{1}\n{0}'.format(self.quotes, filename)
+                    file_comment_lines = '{0}\n{1}\n{0}'.format(self.comment_config.quotes, filename)
             else:
                 filename = 'stdin'
-                file_comment_lines = '{0}\n{1}\n{0}'.format(self.quotes, filename)
+                file_comment_lines = '{0}\n{1}\n{0}'.format(self.comment_config.quotes, filename)
             list_to.append(file_comment_lines + '\n')
         
         last = 0
@@ -609,7 +568,7 @@ class PyComment(object):
 
         :return: None
         """
-        with open(patch_file, 'w', encoding=self.encoding) as f:
+        with open(patch_file, 'w', encoding=self.read_config.encoding) as f:
             f.writelines(lines_to_write)
 
     def overwrite_source_file(self, lines_to_write):
@@ -623,7 +582,7 @@ class PyComment(object):
         tmp_filename = '{0}.writing'.format(self.input_file)
         ok = False
         try:
-            with open(tmp_filename, 'w', encoding=self.encoding) as fh:
+            with open(tmp_filename, 'w', encoding=self.read_config.encoding) as fh:
                 fh.writelines(lines_to_write)
             ok = True
         finally:

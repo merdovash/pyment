@@ -21,7 +21,7 @@ class _Collector(metaclass=TransactionBoundSingleton):
 
     def add_link(self, link: ILink):
         """
-        Извлечет из связи данные для уведомления
+        Fooo
 
         :param link: 
         :type link: ILink
@@ -31,7 +31,7 @@ class _Collector(metaclass=TransactionBoundSingleton):
 
     def execute(self):
         """
-        Опубликует события по всем документам, по которым изменился статус оплаты
+        Bar
         """
         pass
 
@@ -43,7 +43,9 @@ class UiNotification(ILinkOperationsHandler):
 
     @ignorable()
     def process(self):
-        """Отправит изменения в специальный коллектор
+        """
+        Baz
+        
         :return:
         """
         pass

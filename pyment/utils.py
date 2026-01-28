@@ -8,6 +8,8 @@ __licence__ = "GPL3"
 __version__ = "0.5.0"
 __maintainer__ = "V. Schekochihin"
 
+from dataclasses import fields
+
 RAISES_NAME_REGEX = r'^([\w.]+)'
 
 
@@ -86,24 +88,30 @@ def normalize_default_value(default_value):
     """
     if not default_value or not isinstance(default_value, str):
         return default_value
-    
+
     # Check if the value starts and ends with triple double quotes
     if default_value.startswith('"""') and default_value.endswith('"""'):
         # Extract the content between triple quotes
         content = default_value[3:-3]
         # Wrap with single quotes
         return "'" + content + "'"
-    
+
     # Check if the value starts and ends with triple single quotes
     if default_value.startswith("'''") and default_value.endswith("'''"):
         # Extract the content between triple quotes
         content = default_value[3:-3]
         # Wrap with single quotes
         return "'" + content + "'"
-    
+
     # If triple quotes appear anywhere else in the string, replace them
     normalized = default_value.replace('"""', "'")
     normalized = normalized.replace("'''", "'")
-    
+
     return normalized
 
+
+def from_dict(dc_type: type, data: dict):
+    class_fields = {f.name for f in fields(dc_type)}
+    filtered_data = {k: v for k, v in data.items() if k in class_fields}
+
+    return dc_type(**filtered_data)
