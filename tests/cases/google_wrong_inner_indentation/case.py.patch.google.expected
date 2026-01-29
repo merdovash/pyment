@@ -1,0 +1,11 @@
+--- a/case.py
++++ b/case.py
+@@ -6,7 +6,7 @@
+     Returns:
+ 
+     Raises:
+-      test
++        test
+ 
+     """
+     pass

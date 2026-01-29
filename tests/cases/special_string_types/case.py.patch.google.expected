@@ -1,0 +1,33 @@
+--- a/case.py
++++ b/case.py
+@@ -1,17 +1,27 @@
+ def foo():
++    """Foo"""
+     __doc__ = """\
+     Foo"""
+ 
+ 
+ def bar(param):
+-    r"""this is a docstring
++    """
++    this is a docstring
++
++    Args:
++        param:
++
++    Returns:
++
++    Raises:
++
+     """
+ 
+ 
+ def foobar():
+-    u"""this is a docstring
+-    """
++    """this is a docstring"""
+ 
+ 
+ def no_docs():
++    """No docs"""
+     something = '''bla bla bla'''

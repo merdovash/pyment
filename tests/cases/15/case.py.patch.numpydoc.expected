@@ -3,54 +3,58 @@
 @@ -1,20 +1,44 @@
  def func(param1=True, param2='default val'):
 -    '''Description of func with docstring groups style.
-+    """
-+    Description of func with docstring groups style.
- 
+-
 -    Params:
 -        param1 - descr of param1 that has True for default value.
 -        param2 - descr of param2
+-
+-    Returns:
++    """
++    Description of func with docstring groups style.
++    
 +    Parameters
 +    ----------
 +    param1 :
 +        descr of param1 that has True for default value
 +    param2 :
 +        descr of param2 (Default value = 'default val')
- 
--    Returns:
++    
 +    Returns
 +    -------
 +    type
          some value
- 
+-
 -    Raises:
 -        keyError: raises key exception
 -        TypeError: raises type exception
+-
+-    '''
++    
 +    Raises
 +    ------
 +    keyError
 +        raises key exception
 +    TypeError
 +        raises type exception
- 
--    '''
++    
 +    """
      pass
  
  class A:
-+    """ A """
++    """A"""
      def method(self, param1, param2=None):
 +        """
 +        Method
-+
++        
 +        Parameters
 +        ----------
 +        param1 :
-+            
++        
 +        param2 :
 +            (Default value = None)
-+
++        
 +        Returns
 +        -------
-+
++        
 +        """
          pass

@@ -314,7 +314,7 @@ class PyComment(object):
                         # If we were still looking for the class docstring, stop
                         # looking.  Otherwise we'll mistake this method's
                         # docstring for the class docstring and mess stuff up!
-                        # (See issue #83).
+                        # (See issue #commented_magic_methods).
                         waiting_docs = False
                         continue
                 elif l[l.find(' '):].strip().startswith("__") and 'private' not in self.comment_config.method_scope:
@@ -322,7 +322,7 @@ class PyComment(object):
                     # If we were still looking for the class docstring, stop
                     # looking.  Otherwise we'll mistake this __dunder_method__
                     # docstring for the class docstring and mess stuff up!
-                    # (See issue #83).
+                    # (See issue #commented_magic_methods).
                     waiting_docs = False
                     continue
                 reading_element = 'start'
@@ -421,6 +421,8 @@ class PyComment(object):
                     elem_list.pop(i)
                 else:
                     i += 1
+        for e in elem_list:
+            print('ffff' + repr(e['docs']))
         self.docs_list = elem_list
 
         self.parsed = True

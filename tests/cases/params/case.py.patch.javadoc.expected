@@ -9,7 +9,7 @@
 +    """
 +    Func2
 +
-+    @param param1: 
++    @param param1:
 +
 +    """
      pass
@@ -19,8 +19,8 @@
 +    """
 +    Func3
 +
-+    @param param1: 
-+    @param param2: 
++    @param param1:
++    @param param2:
 +
 +    """
      pass
@@ -30,9 +30,9 @@
 +    """
 +    Func3
 +
-+    @param param1: 
-+    @param param2: 
-+    @param param3: 
++    @param param1:
++    @param param2:
++    @param param3:
 +
 +    """
      pass
@@ -52,7 +52,7 @@
 +    """
 +    Func5
 +
-+    @param param1: 
++    @param param1:
 +    @param param2: (Default value = 123)
 +
 +    """
@@ -63,8 +63,8 @@
 +    """
 +    Func6
 +
-+    @param param1: 
-+    @param param2: 
++    @param param1:
++    @param param2:
 +    @param param3: (Default value = 123)
 +
 +    """
@@ -75,7 +75,7 @@
 +    """
 +    Func7
 +
-+    @param param1: 
++    @param param1:
 +    @param param2: (Default value = None)
 +    @param param3: (Default value = 123)
 +

@@ -1,11 +1,10 @@
 --- a/case.py
 +++ b/case.py
-@@ -2,6 +2,13 @@
+@@ -2,6 +2,12 @@
      """Foo"""
  
      def before_create(self, fltr: sbis.Record):
-+        """
-+        Before create
++        """Before create
 +
 +        :param fltr: 
 +        :type fltr: sbis.Record

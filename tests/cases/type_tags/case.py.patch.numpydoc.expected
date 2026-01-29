@@ -8,9 +8,9 @@
 +    Parameters
 +    ----------
 +    a : int
-+        
++
 +    b : int
-+        
++
 +
 +    Returns
 +    -------

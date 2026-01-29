@@ -1,8 +1,15 @@
+import dataclasses
 import re
 from collections import defaultdict
 
 from pyment.domain import ParamsConfig
 from pyment.utils import isin_alone, isin_start, isin, get_leading_spaces, RAISES_NAME_REGEX
+
+
+@dataclasses.dataclass(slots=True)
+class ParsedElement:
+    nature: str
+    name: str
 
 
 class DocToolsBase(object):
@@ -763,7 +770,7 @@ class DocsTools(object):
         """
         key = self.opt[key][self.style['in']]['name']
         if key.startswith(':returns'):
-            data = data.replace(':return:', ':returns:')  # see issue 9
+            data = data.replace(':return:', ':returns:')  # see issue no_spec_full_comment
         idx = len(data)
         ini = 0
         loop = True
@@ -878,7 +885,65 @@ class DocsTools(object):
                         end = len(data)
 
         return start, end
-
+    
+    def __parse_param(self, striped: str, style_param: str, ret: dict[str, dict]):
+        current_element = ParsedElement(
+            name=None,
+            nature='param',
+        )
+        param_name, param_type, param_description = None, None, None
+        line = striped.replace(style_param, '', 1).strip()
+        if ':' in line:
+            param_part, param_description = line.split(':', 1)
+        else:
+            print("WARNING: malformed docstring parameter")
+            param_part = None
+        if param_part is not None:
+            res = re.split(r'\s+', param_part.strip())
+            if len(res) == 1:
+                param_name = res[0].strip()
+            elif len(res) == 2:
+                param_type, param_name = res[0].strip(), res[1].strip()
+            else:
+                print("WARNING: malformed docstring parameter")
+        if param_name:
+            # keep track in case of multiline
+            current_element.name = param_name
+            if param_name not in ret:
+                ret[param_name] = {'type': None, 'type_in_param': None, 'description': None}
+            if param_type:
+                ret[param_name]['type_in_param'] = param_type
+            if param_description:
+                ret[param_name]['description'] = param_description.strip()
+        else:
+            print("WARNING: malformed docstring parameter: unable to extract name")
+        
+        return current_element
+    
+    def __parse_param_type(self, striped: str, style_type: str, ret: dict[str, dict]):
+        current_element = ParsedElement(
+            name=None,
+            nature='type',
+        )
+        line = striped.replace(style_type, '', 1).strip()
+        if ':' in line:
+            param_name, param_type = line.split(':', 1)
+            param_name = param_name.strip()
+            param_type = param_type.strip()
+        else:
+            print("WARNING: malformed docstring parameter")
+            param_name = None
+            param_type = None
+        if param_name:
+            # keep track in case of multiline
+            current_element.name = param_name
+            if param_name not in ret:
+                ret[param_name] = {'type': None, 'type_in_param': None, 'description': None}
+            if param_type:
+                ret[param_name]['type'] = param_type.strip()
+        
+        return current_element
+    
     def _extra_tagstyle_elements(self, data):
         ret = {}
         style_param = self.opt['param'][self.style['in']]['name']
@@ -887,77 +952,31 @@ class DocsTools(object):
         # fixme for return and raise, ignore last char as there's an optional 's' at the end and they are not managed in this function
         style_return = self.opt['return'][self.style['in']]['name'][:-1]
         style_raise = self.opt['raise'][self.style['in']]['name'][:-1]
-        last_element = {'nature': None, 'name': None}
+        current_element = None
         for line in data.splitlines():
-            param_name = None
-            param_type = None
-            param_description = None
-            param_part = None
             # parameter statement
-            if line.strip().startswith(style_param):
-                last_element['nature'] = 'param'
-                last_element['name'] = None
-                line = line.strip().replace(style_param, '', 1).strip()
-                if ':' in line:
-                    param_part, param_description = line.split(':', 1)
-                else:
-                    print("WARNING: malformed docstring parameter")
-                    param_part = None
-                if param_part is not None:
-                    res = re.split(r'\s+', param_part.strip())
-                    if len(res) == 1:
-                        param_name = res[0].strip()
-                    elif len(res) == 2:
-                        param_type, param_name = res[0].strip(), res[1].strip()
-                    else:
-                        print("WARNING: malformed docstring parameter")
-                if param_name:
-                    # keep track in case of multiline
-                    last_element['nature'] = 'param'
-                    last_element['name'] = param_name
-                    if param_name not in ret:
-                        ret[param_name] = {'type': None, 'type_in_param': None, 'description': None}
-                    if param_type:
-                        ret[param_name]['type_in_param'] = param_type
-                    if param_description:
-                        ret[param_name]['description'] = param_description.strip()
-                else:
-                    print("WARNING: malformed docstring parameter: unable to extract name")
+            striped = line.strip()
+            if striped.startswith(style_param):
+                current_element = self.__parse_param(striped, style_param, ret)
             # type statement
-            elif line.strip().startswith(style_type):
-                last_element['nature'] = 'type'
-                last_element['name'] = None
-                line = line.strip().replace(style_type, '', 1).strip()
-                if ':' in line:
-                    param_name, param_type = line.split(':', 1)
-                    param_name = param_name.strip()
-                    param_type = param_type.strip()
-                else:
-                    print("WARNING: malformed docstring parameter")
-                    param_name = None
-                    param_type = None
-                if param_name:
-                    # keep track in case of multiline
-                    last_element['nature'] = 'type'
-                    last_element['name'] = param_name
-                    if param_name not in ret:
-                        ret[param_name] = {'type': None, 'type_in_param': None, 'description': None}
-                    if param_type:
-                        ret[param_name]['type'] = param_type.strip()
-            elif line.strip().startswith(style_raise) or line.startswith(style_return) or line.startswith(style_rtype):
+            elif striped.startswith(style_type):
+                current_element = self.__parse_param_type(striped, style_type, ret)
+            elif striped.startswith(style_raise) or striped.startswith(style_return) or striped.startswith(style_rtype):
                 # fixme not managed in this function
-                last_element['nature'] = 'raise-return'
-                last_element['name'] = None
-            else:
+                current_element = ParsedElement(
+                    nature='raise-return',
+                    name=None,
+                )
+            elif current_element:
                 # suppose to be line of a multiline element
-                if last_element['nature'] == 'param':
-                    if ret[last_element['name']]['description'] is None:
-                        ret[last_element['name']]['description'] = ''
-                    ret[last_element['name']]['description'] += f"\n{line}"
-                elif last_element['nature'] == 'type':
-                    if ret[last_element['name']]['description'] is None:
-                        ret[last_element['name']]['description'] = ''
-                    ret[last_element['name']]['description'] += f"\n{line}"
+                if current_element.nature == 'param':
+                    if ret[current_element.name]['description'] is None:
+                        ret[current_element.name]['description'] = ''
+                    ret[current_element.name]['description'] += f"\n{line}"
+                elif current_element.nature == 'type':
+                    if ret[current_element.name]['description'] is None:
+                        ret[current_element.name]['description'] = ''
+                    ret[current_element.name]['description'] += f"\n{line}"
         return ret
 
     def _extract_not_tagstyle_old_way(self, data):

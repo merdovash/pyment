@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Foo",
+    "deftype": "class",
+    "input_style": "google",
+    "description": ""
+  },
+  {
+    "name": "__init__",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Some init docstring"
+  },
+  {
+    "name": "Bar",
+    "deftype": "class",
+    "input_style": "google",
+    "description": ""
+  },
+  {
+    "name": "__repr__",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Some repr docstring"
+  },
+  {
+    "name": "__init__",
+    "deftype": "def",
+    "input_style": "google",
+    "description": "Some docstring"
+  }
+]

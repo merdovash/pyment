@@ -3,11 +3,11 @@
 @@ -1,5 +1,10 @@
  def meaning(subject, answer=False):
      """
++    Meaning
 +    
-+
-+    @param subject: 
++    @param subject:
 +    @param answer: (Default value = False)
-+
++    
      >>> meaning('life', answer=True)
      42
      """

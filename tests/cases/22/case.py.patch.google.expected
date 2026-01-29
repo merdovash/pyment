@@ -6,13 +6,13 @@
      def __init__(self, param1):
 +        """
 +        Initialize
-+
++        
 +        Args:
-+            param1: 
-+
++            param1:
++        
 +        Returns:
-+
++        
 +        Raises:
-+
++        
 +        """
          pass

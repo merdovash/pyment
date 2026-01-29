@@ -3,17 +3,18 @@
 @@ -1,7 +1,14 @@
  def test():
      """
-+    
- 
+-
 -    :raises ValueError: on incorrect JSON
 -    :raises requests.exceptions.HTTPError: on response error from server
++    Test
++    
 +    Args:
-+
++    
 +    Returns:
-+
++    
 +    Raises:
 +        ValueError: on incorrect JSON
 +        requests.exceptions.HTTPError: on response error from server
-+
++    
      """
      pass

@@ -1,0 +1,349 @@
+--- a/case.py
++++ b/case.py
+@@ -1,101 +1,320 @@
+ def func(): # comment with (parents):
++    """Func"""
+     pass
+ 
+ 
+ def func0(param1): # comment with (parents):,
+-    """description
+-    :param param1: yoyo
+-    :returns: nothing
++    """
++    description
++
++    Parameters
++    ----------
++    param1 :
++        yoyo
++
++    Returns
++    -------
++    type
++        nothing
++
+     """
+     pass
+ 
+ 
+ def func1(param1: str):
++    """
++    Func1
++
++    Parameters
++    ----------
++    param1 : str
++
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func2(param1: str) -> int:
++    """
++    Func2
++
++    Parameters
++    ----------
++    param1 : str
++
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func3(param1: str) -> str:
+-    """Func 3
+-
+-    :param param1: param description
+-    :return: the value
++    """
++    Func 3
++
++    Parameters
++    ----------
++    param1 : str
++        param description
++
++    Returns
++    -------
++    str
++        the value
++
+     """
+     pass
+ 
+ 
+ def func4(param1: str, param2: List[int]):
++    """
++    Func4
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : List[int]
++
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func5(param1: str, param2: List[int]) -> Dict[str,Object]:  # yet:(another) comment
++    """
++    Func5
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : List[int]
++
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func6(param1: str, param2: Dict[str,Object]) -> str:
+-    """Func 6
+-
+-    :param param1: the first parameter
+-    :type param1: str
+-    :param param2: the second parameter
+-    :returns: the message
+-    :rtype: str
++    """
++    Func 6
++
++    Parameters
++    ----------
++    param1 : str
++        the first parameter
++    param2 : Dict[str,Object]
++        the second parameter
++
++    Returns
++    -------
++    str
++        the message
+ 
+     """
+     pass
+ 
+ 
+ def func7(param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
++    """
++    Func7
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : Dict[str, Object]
++
++    param3 : int
++        (Default value = 12)
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func8(param1 : str, param2: list=None, param3: str = "foo", param4="bar") -> str:
++    """
++    Func8
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : list
++        (Default value = None)
++    param3 : str
++        (Default value = "foo")
++    param4 :
++        (Default value = "bar")
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func9(param1: str,
+           param2: list = None,
+           param3: str = "foo") -> str:
++    """
++    Func9
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : list
++        (Default value = None)
++    param3 : str
++        (Default value = "foo")
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func10(  param1: str = "", param2='', param3=call_func('foobar')  ) :
++    """
++    Func10
++
++    Parameters
++    ----------
++    param1 : str
++        (Default value = "")
++    param2 :
++        (Default value = '')
++    param3 :
++        (Default value = call_func('foobar'))
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func11(self, param1: str, param2: Dict[str, Object], param3: OAuth2PasswordRequestForm = Depends(), param4: int = 1) -> str:
++    """
++    Func11
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : Dict[str, Object]
++
++    param3 : OAuth2PasswordRequestForm
++        (Default value = Depends())
++    param4 : int
++        (Default value = 1)
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func12(cls, param1: str, param2: Dict[str, Object], param3: int = 12) -> str:
++    """
++    Func12
++
++    Parameters
++    ----------
++    param1 : str
++
++    param2 : Dict[str, Object]
++
++    param3 : int
++        (Default value = 12)
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func13(param1, param2: Dict["str", Object], param3: int = 12) -> str:
++    """
++    Func13
++
++    Parameters
++    ----------
++    param1 :
++
++    param2 : Dict["str", Object]
++
++    param3 : int
++        (Default value = 12)
++
++    Returns
++    -------
++
++    """
+     pass
+ 
+ 
+ def func14(param1=True, param2: str = 'default val'):
+-    '''Description of func with docstring groups style.
+-
+-    Params:
+-        param1 - descr of param1 that has True for default value.
+-        param2 - descr of param2
+-
+-    Returns:
++    """
++    Description of func with docstring groups style.
++
++    Parameters
++    ----------
++    param1 :
++        descr of param1 that has True for default value
++    param2 : str
++        descr of param2 (Default value = 'default val')
++
++    Returns
++    -------
++    type
+         some value
+ 
+-    Raises:
+-        keyError: raises key exception
+-        TypeError: raises type exception
+-
+-    '''
++    Raises
++    ------
++    keyError
++        raises key exception
++    TypeError
++        raises type exception
++
++    """
+     pass
+ 
+     class A:
++        """A"""
+         def method(self, param1, param2=None) -> int:
++            """
++            Method
++
++            Parameters
++            ----------
++            param1 :
++
++            param2 :
++                (Default value = None)
++
++            Returns
++            -------
++
++            """
+             pass
+ 

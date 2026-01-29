@@ -1,0 +1,128 @@
+--- a/case.py
++++ b/case.py
+@@ -1,58 +1,102 @@
+ def func(param_file, mask):
+     """
+-    :param lxml.etree.ElementTree param_file: xml-element tree
+-        obtained from the file.
+-    :param str mask: Name of mask to be considered.
++    Func
++
++    Args:
++        param_file (lxml.etree.ElementTree): xml-element tree
++    obtained from the file.
++        mask (str): Name of mask to be considered.
++
++    Returns:
++
++    Raises:
++
+     """
+     pass
+ 
+ 
+ def func2(param1: str, param2):
+     """
+-    :param str param1: description 1
+-    :param str param2: description 2
+-    :returns: description return
++    Func2
++
++    Args:
++        param1 (str): description 1
++        param2 (str): description 2
++
++    Returns:
++        description return
++
++    Raises:
++
+     """
+     pass
+ 
+ 
+ def func3(param1: str, param2):
+     """
+-    :param param1: description 1 is
+-        a multiline description
+-    :type param1: str
+-    :param str param2: description 2
+-    :returns: description return
++    Func3
++
++    Args:
++        param1 (str): description 1 is
++    a multiline description
++        param2 (str): description 2
++
++    Returns:
++        description return
++
++    Raises:
++
+     """
+     pass
+ 
+ 
+ def func4(param1, param2):
+     """
+-    :param param1: description 1
+-    :type param1: str
+-    :param str param2: description 2
+-    :returns: description return
++    Func4
++
++    Args:
++        param1 (str): description 1
++        param2 (str): description 2
++
++    Returns:
++        description return
++
++    Raises:
++
+     """
+     pass
+ 
+ 
+ def func5(param1, param2):
+     """
+-    :param int param1: description 1
+-    :type param1: str
+-    :param param2: description 2
+-    :returns: description return
++    Func5
++
++    Args:
++        param1 (int): description 1
++        param2: description 2
++
++    Returns:
++        description return
++
++    Raises:
++
+     """
+     pass
+ 
+ 
+ def func6(param1: list, param2):
+     """
+-    :param int param1: description 1
+-    :type param1: str
+-    :param param2: description 2
+-    :returns: description return
++    Func6
++
++    Args:
++        param1 (list): description 1
++        param2: description 2
++
++    Returns:
++        description return
++
++    Raises:
++
+     """
+     pass
+ 

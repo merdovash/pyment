@@ -1,214 +1,237 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,108 +1,168 @@
+@@ -1,109 +1,169 @@
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: 
+-
++    """
++    desc
++    
 +    Args:
-+        a: 
-+        b: 
-+
++        a:
++        b:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :type a: 
 -    :param b: 
 -    :type b: 
+-
++    """
++    desc
++    
 +    Args:
-+        a: 
-+        b: 
-+
++        a:
++        b:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :type a: str
 -    :param b: 
 -    :type b: str
+-
++    """
++    desc
++    
 +    Args:
-+        a (str): 
-+        b (str): 
-+
++        a (str):
++        b (str):
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :type a: str
 -    :param b: 
 -    :type b: 
+-
++    """
++    desc
++    
 +    Args:
-+        a (str): 
-+        b: 
-+
++        a (str):
++        b:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: desc a
 -    :param b: 
+-
++    """
++    desc
++    
 +    Args:
 +        a: desc a
-+        b: 
-+
++        b:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param b: 
 -    :param a: desc a
+-
++    """
++    desc
++    
 +    Args:
 +        a: desc a
-+        b: 
-+
++        b:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: desc b
+-
++    """
++    desc
++    
 +    Args:
-+        a: 
++        a:
 +        b: desc b
-+
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: 
 -    :param c: 
+-
++    """
++    desc
++    
 +    Args:
-+        a: 
-+        b: 
-+        c: 
-+
++        a:
++        b:
++        c:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: desc b
 -    :param c: 
+-
++    """
++    desc
++    
 +    Args:
-+        a: 
++        a:
 +        b: desc b
-+        c: 
-+
++        c:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: desc a
 -    :param b: 
 -    :param c: 
+-
++    """
++    desc
++    
 +    Args:
 +        a: desc a
-+        b: 
-+        c: 
-+
++        b:
++        c:
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: desc a
 -    :param b: 
 -    :param c: desc c
+-
++    """
++    desc
++    
 +    Args:
 +        a: desc a
-+        b: 
++        b:
 +        c: desc c
-+
++    
 +    Returns:
-+
++    
 +    Raises:
- 
++    
      """
      pass
+ 

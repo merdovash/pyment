@@ -1,162 +1,185 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,108 +1,116 @@
+@@ -1,109 +1,117 @@
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: 
-+    @param a: 
-+    @param b: 
- 
+-
++    """
++    desc
++    
++    @param a:
++    @param b:
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :type a: 
 -    :param b: 
 -    :type b: 
-+    @param a: 
-+    @param b: 
- 
+-
++    """
++    desc
++    
++    @param a:
++    @param b:
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :type a: str
 -    :param b: 
 -    :type b: str
-+    @param a: 
+-
++    """
++    desc
++    
++    @param a:
 +    @type a: str
-+    @param b: 
++    @param b:
 +    @type b: str
- 
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :type a: str
 -    :param b: 
 -    :type b: 
-+    @param a: 
+-
++    """
++    desc
++    
++    @param a:
 +    @type a: str
-+    @param b: 
- 
++    @param b:
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: desc a
 -    :param b: 
+-
++    """
++    desc
++    
 +    @param a: desc a
-+    @param b: 
- 
++    @param b:
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param b: 
 -    :param a: desc a
+-
++    """
++    desc
++    
 +    @param a: desc a
-+    @param b: 
- 
++    @param b:
++    
      """
      pass
  
  def func(a, b):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: desc b
-+    @param a: 
+-
++    """
++    desc
++    
++    @param a:
 +    @param b: desc b
- 
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: 
 -    :param c: 
-+    @param a: 
-+    @param b: 
-+    @param c: 
- 
+-
++    """
++    desc
++    
++    @param a:
++    @param b:
++    @param c:
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: 
 -    :param b: desc b
 -    :param c: 
-+    @param a: 
+-
++    """
++    desc
++    
++    @param a:
 +    @param b: desc b
-+    @param c: 
- 
++    @param c:
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: desc a
 -    :param b: 
 -    :param c: 
+-
++    """
++    desc
++    
 +    @param a: desc a
-+    @param b: 
-+    @param c: 
- 
++    @param b:
++    @param c:
++    
      """
      pass
  
  def func(a, b, c):
 -    """desc
-+    """
-+    desc
- 
+-
 -    :param a: desc a
 -    :param b: 
 -    :param c: desc c
+-
++    """
++    desc
++    
 +    @param a: desc a
-+    @param b: 
++    @param b:
 +    @param c: desc c
- 
++    
      """
      pass
+ 

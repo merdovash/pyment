@@ -1,5 +1,5 @@
 class Foo:
-    """Foo"""
+    """ Foo """
     def get_id_and_uuid(self, regl_id=None, uuid=None, pd_type=None) -> tuple[int, str]:
         """
         Foo (id, uuid) Foo id Foo uuid [Foo]

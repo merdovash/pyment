@@ -9,11 +9,14 @@ __version__ = "0.5.0"
 __maintainer__ = "V. Schekochihin"
 
 from dataclasses import fields
+from textwrap import dedent
+from typing import Generator
 
-from pyment.comment_builder import ClassCommentBuilder, ModuleCommentBuilder, FunctionCommentBuilder
+from pyment.comment_builder import ClassCommentBuilder, ModuleCommentBuilder, FunctionCommentBuilder, CommentBuilder, \
+    create_strategy
 from pyment.configs import CommentBuilderConfig, CaseConfig
 from pyment.domain import ParamsConfig
-from pyment.utils import normalize_default_value
+from pyment.utils import normalize_default_value, log_function, log_generator
 
 """
 Formats supported at the time:
@@ -29,7 +32,7 @@ Formats supported at the time:
 
 class DocString(object):
     """This class represents the docstring"""
-
+    
     def __init__(self, elem_raw, comment_config: CommentBuilderConfig, case_config: CaseConfig, spaces='', docs_raw=None, input_style=None,
                  trailing_space=True, type_stub=False, before_lim=''):
         """
@@ -115,7 +118,7 @@ class DocString(object):
         return txt
 
     def __repr__(self):
-        return self.__str__()
+        return f'<{self.__class__.__name__} name={self.case_config.name}>'
 
     def get_input_docstring(self):
         """Get the input raw docstring.
@@ -314,9 +317,9 @@ class DocString(object):
             data = '\n'.join([d.rstrip().replace(self.docs['out']['spaces'], '', 1) for d in self.docs['in']['doctests'].splitlines()])
             self.docs['out']['doctests'] = data
         return result
-
-    def _extract_docs_description(self):
-        """Extract main description from docstring"""
+    
+    @log_function
+    def __extract_current_desc(self):
         # FIXME: the indentation of descriptions is lost
         data = '\n'.join([d.rstrip().replace(self.docs['out']['spaces'], '', 1) for d in self.docs['in']['raw'].splitlines()])
         if self.comment_config.dst.style['in'] == 'groups':
@@ -335,16 +338,22 @@ class DocString(object):
                 idx = -1
             else:
                 idx = len('\n'.join(lines[:line_num]))
+
         elif self.comment_config.dst.style['in'] == 'unknown':
             idx = -1
         else:
             idx = self.comment_config.dst.get_elem_index(data)
+        
         if idx == 0:
-            self.docs['in']['desc'] = ''
+            return ''
         elif idx == -1:
-            self.docs['in']['desc'] = data
+            return data
         else:
-            self.docs['in']['desc'] = data[:idx]
+            return data[:idx]
+    
+    def _extract_docs_description(self):
+        """Extract main description from docstring"""
+        self.docs['in']['desc'] = self.__extract_current_desc()
 
     def _extract_groupstyle_docs_params(self):
         """Extract group style parameters"""
@@ -581,23 +590,21 @@ class DocString(object):
         self._extract_docs_description()
         self._extract_docs_other()
         self.parsed_docs = True
+    
+    @log_function
+    def __extract_desc(self):
+        """Extract description"""
+        # TODO: manage different in/out styles
+        if self.docs['in']['desc']:
+            return self.docs['in']['desc']
+        return ''
 
     def _set_desc(self):
         """Sets the global description if any"""
-        # TODO: manage different in/out styles
-        if self.docs['in']['desc']:
-            self.docs['out']['desc'] = self.docs['in']['desc']
-        else:
-            # If no docstring exists, use the function or class name as the description
-            # The builder will format it appropriately for functions
-            if self.element.name:
-                self.docs['out']['desc'] = self.element.name
-            else:
-                self.docs['out']['desc'] = ''
+        self.docs['out']['desc'] = self.__extract_desc()
 
-    def _set_params(self):
-        """Sets the parameters with types, descriptions and default value if any
-        taken from the input docstring and the signature parameters"""
+    @log_generator
+    def __extract_params(self) -> Generator[tuple[str, str, str | None, str | None], None, None]:
         # TODO: manage different in/out styles
         # convert the list of signature's extracted params into a dict with the names of param as keys
         sig_params = {e.param: {'type': e.type, 'default': e.default} for e in self.element.params}
@@ -621,10 +628,15 @@ class DocString(object):
                 out_description = docs_params[name]['description']
                 if not out_type or (not self._options['hint_type_priority'] and docs_params[name]['type']):
                     out_type = docs_params[name]['type']
-            self.docs['out']['params'].append((name, out_description, out_type, out_default))
+            yield name, out_description, out_type, out_default
+    
+    def _set_params(self):
+        """Sets the parameters with types, descriptions and default value if any
+        taken from the input docstring and the signature parameters"""
+        self.docs['out']['params'].extend(self.__extract_params())
 
-    def _set_raises(self):
-        """Sets the raises and descriptions"""
+    @log_function
+    def __extract_raises(self) -> list | None:
         # TODO: manage different in/out styles
         # manage setting if not mandatory for numpy but optional
         if self.docs['in']['raises']:
@@ -632,85 +644,86 @@ class DocString(object):
                     (self.comment_config.dst.style['out'] == 'numpydoc' and
                      'raise' not in self.comment_config.dst.numpydoc.get_excluded_sections()):
                 # list of parameters is like: (name, description)
-                self.docs['out']['raises'] = list(self.docs['in']['raises'])
+                return list(self.docs['in']['raises'])
+    
+    def _set_raises(self):
+        """Sets the raises and descriptions"""
+        raises = self.__extract_raises()
+        if raises:
+            self.docs['out']['raises'] = raises
 
-    def _set_return(self):
-        """Sets the return parameter with description and rtype if any"""
+    @log_function
+    def __extract_return(self) -> tuple[str | None, str | None]:
         # TODO: manage return retrieved from element code (external)
         # TODO: manage different in/out styles
-        if type(self.docs['in']['return']) is list and self.comment_config.dst.style['out'] not in ['groups', 'numpydoc', 'google']:
+        rtype, rcomment = None, None
+        if isinstance(self.docs['in']['return'], list) and self.comment_config.dst.style['out'] not in ('groups', 'numpydoc', 'google'):
             # TODO: manage return names
             # manage not setting return if not mandatory for numpy
             lst = self.docs['in']['return']
             if lst:
                 if lst[0][0] is not None:
-                    self.docs['out']['return'] = "%s-> %s" % (lst[0][0], lst[0][1])
+                    rcomment = "%s-> %s" % (lst[0][0], lst[0][1])
                 else:
-                    self.docs['out']['return'] = lst[0][1]
-                self.docs['out']['rtype'] = lst[0][2]
+                    rcomment = lst[0][1]
+                rtype = lst[0][2]
         else:
-            self.docs['out']['return'] = self.docs['in']['return']
-            self.docs['out']['rtype'] = self.docs['in']['rtype']
+            rcomment = self.docs['in']['return']
+            rtype = self.docs['in']['rtype']
         if (self._options['hint_rtype_priority'] or not self.docs['out']['rtype']) and self.element.rtype:
-            self.docs['out']['rtype'] = self.element.rtype
-
+            rtype = self.element.rtype
+        
+        return rtype, rcomment
+    
+    def _set_return(self):
+        """Sets the return parameter with description and rtype if any"""
+        rtype, rcomment = self.__extract_return()
+        self.docs['out']['rtype'] = rtype
+        self.docs['out']['return'] = rcomment
+    
+    @log_function
+    def __extract_other(self) -> str | None:
+        if self.comment_config.dst.style['in'] == 'numpydoc':
+            if self.docs['in']['raw'] is not None:
+                return self.comment_config.dst.numpydoc.get_raw_not_managed(self.docs['in']['raw'])
+            elif 'post' not in self.docs['out'] or self.docs['out']['post'] is None:
+                return ''
+        return None
+        
     def _set_other(self):
         """Sets other specific sections"""
         # manage not setting if not mandatory for numpy
-        if self.comment_config.dst.style['in'] == 'numpydoc':
-            if self.docs['in']['raw'] is not None:
-                self.docs['out']['post'] = self.comment_config.dst.numpydoc.get_raw_not_managed(self.docs['in']['raw'])
-            elif 'post' not in self.docs['out'] or self.docs['out']['post'] is None:
-                self.docs['out']['post'] = ''
-
+        self.docs['out']['post'] = self.__extract_other()
+    
+    def _define_builder(self) -> CommentBuilder:
+        # Create appropriate builder using the stored config and strategy
+        strategy = create_strategy(self.comment_config.dst.style.get('out', 'reST'), self.comment_config, self.case_config)
+        
+        element_type = self.element.deftype
+        if element_type == 'class':
+            return ClassCommentBuilder(self.comment_config, self.case_config, strategy)
+        if element_type == 'module':
+            return ModuleCommentBuilder(self.comment_config, self.case_config, strategy)
+        # 'def' or default
+        return FunctionCommentBuilder(self.comment_config, self.case_config, strategy)
+    
     def _create_builder(self):
         """Create and configure the appropriate builder based on element type.
         
         :return: configured CommentBuilder instance
         """
         # Determine element type
-        element_type = self.element.deftype
-                
-        # Create strategy based on output style
-        from .comment_builder.strategy import create_strategy
-        style_name = self.comment_config.dst.style.get('out', 'reST')
-        strategy = create_strategy(style_name, self.comment_config, self.case_config)
-        
-        # Create appropriate builder using the stored config and strategy
-        if element_type == 'class':
-            builder = ClassCommentBuilder(self.comment_config, self.case_config, strategy)
-        elif element_type == 'module':
-            builder = ModuleCommentBuilder(self.comment_config, self.case_config, strategy)
-        else:  # 'def' or default
-            builder = FunctionCommentBuilder(self.comment_config, self.case_config, strategy)
+        builder = self._define_builder()
         
         # Set data in builder
-        desc = self.docs['out']['desc'].strip()
-        element_name = self.element.name
-        # Check if description was auto-generated (no input docstring and desc equals element name)
-        is_auto_generated_name = (self.docs['in']['raw'] is None and 
-                                   element_name and 
-                                   desc == element_name)
-        
-        # Check if description came from existing docstring
-        has_existing_description = bool(self.docs['in']['desc'] and self.docs['in']['desc'].strip())
-        
-        # Use set_name only for functions (which formats the name), otherwise use set_description
-        if element_type == 'def' and is_auto_generated_name and element_name:
-            builder.set_name(element_name)
-        else:
-            builder.set_description(desc, has_existing=has_existing_description)
-        
+        builder.set_name(self.element.name)
+        builder.set_description(self.docs['out']['desc'].strip(), has_existing=bool(self.docs['in']['desc'] and self.docs['in']['desc'].strip()))
         builder.set_params(self.docs['out']['params'])
         builder.set_return(self.docs['out']['return'], self.docs['out']['rtype'])
         builder.set_raises(self.docs['out']['raises'])
         builder.set_post(self.docs['out'].get('post', ''))
         builder.set_doctests(self.docs['out'].get('doctests', ''))
-        builder.set_element_info(
-            element_name,
-            self.docs['in']['raw'],
-            is_auto_generated_name
-        )
+        builder.set_element_info(self.docs['in']['raw'])
         
         return builder
     
@@ -718,7 +731,8 @@ class DocString(object):
         """Sets the output raw docstring"""
         builder = self._create_builder()
         self.docs['out']['raw'] = builder.build()
-
+    
+    @log_function
     def generate_docs(self):
         """Generates the output docstring"""
         self._set_desc()
@@ -728,6 +742,7 @@ class DocString(object):
         self._set_other()
         self._set_raw()
         self.generated_docs = True
+        return True
 
     def get_raw_docs(self):
         """Generates raw docstring

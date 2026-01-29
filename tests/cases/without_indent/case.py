@@ -26,8 +26,8 @@ class ContractStore(metaclass=MethodBoundSingleton):
         """
         Some desciption
 
-        :param contract_id: 
-        :returns: 
+        :param contract_id:
+        :returns:
 
         """
         if contract_id not in self._contracts:

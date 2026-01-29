@@ -10,7 +10,7 @@
 +    Func2
 +
 +    Args:
-+        param1: 
++        param1:
 +
 +    Returns:
 +
@@ -25,8 +25,8 @@
 +    Func3
 +
 +    Args:
-+        param1: 
-+        param2: 
++        param1:
++        param2:
 +
 +    Returns:
 +
@@ -41,9 +41,9 @@
 +    Func3
 +
 +    Args:
-+        param1: 
-+        param2: 
-+        param3: 
++        param1:
++        param2:
++        param3:
 +
 +    Returns:
 +
@@ -73,7 +73,7 @@
 +    Func5
 +
 +    Args:
-+        param1: 
++        param1:
 +        param2: (Default value = 123)
 +
 +    Returns:
@@ -89,8 +89,8 @@
 +    Func6
 +
 +    Args:
-+        param1: 
-+        param2: 
++        param1:
++        param2:
 +        param3: (Default value = 123)
 +
 +    Returns:
@@ -106,7 +106,7 @@
 +    Func7
 +
 +    Args:
-+        param1: 
++        param1:
 +        param2: (Default value = None)
 +        param3: (Default value = 123)
 +

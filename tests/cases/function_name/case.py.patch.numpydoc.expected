@@ -8,9 +8,9 @@
 +    Parameters
 +    ----------
 +    a :
-+        
++
 +    b :
-+        
++
 +
 +    Returns
 +    -------
@@ -25,9 +25,9 @@
 +    Parameters
 +    ----------
 +    user_id :
-+        
++
 +    user_name :
-+        
++
 +
 +    Returns
 +    -------
@@ -36,7 +36,7 @@
      pass
  
  class UserAccountManager:
-+    """ UserAccountManager """
++    """UserAccountManager"""
      def __init__(self):
 +        """Initialize"""
          pass

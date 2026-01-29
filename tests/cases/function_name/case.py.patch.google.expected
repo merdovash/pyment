@@ -6,8 +6,8 @@
 +    Calculate total sum
 +
 +    Args:
-+        a: 
-+        b: 
++        a:
++        b:
 +
 +    Returns:
 +
@@ -21,8 +21,8 @@
 +    Process user data
 +
 +    Args:
-+        user_id: 
-+        user_name: 
++        user_id:
++        user_name:
 +
 +    Returns:
 +
@@ -32,7 +32,7 @@
      pass
  
  class UserAccountManager:
-+    """ UserAccountManager """
++    """UserAccountManager"""
      def __init__(self):
 +        """Initialize"""
          pass

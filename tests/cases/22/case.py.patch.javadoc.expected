@@ -6,8 +6,8 @@
      def __init__(self, param1):
 +        """
 +        Initialize
-+
-+        @param param1: 
-+
++        
++        @param param1:
++        
 +        """
          pass

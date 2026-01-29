@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .strategy import CommentFormatStrategy
 from ..configs import CommentBuilderConfig, CaseConfig
+from ..utils import log_function
 
 
 class CommentBuilder(object):
@@ -15,6 +16,9 @@ class CommentBuilder(object):
         'post', 'doctests', 'element_name', 'input_raw',
         'is_auto_generated_name', 'has_existing_description'
     )
+    
+    def __repr__(self):
+        return f'<{self.__class__.__name__} name={self.case_config.name}>'
     
     def __init__(self, config: CommentBuilderConfig, case_config: CaseConfig, strategy: CommentFormatStrategy):
         """Initialize the builder with configuration and strategy.
@@ -46,17 +50,22 @@ class CommentBuilder(object):
         :return: self for method chaining
         """
         self.element_name = name
-        self.description = name if name else ''
+        if not self.description:
+            self.description = name if name else ''
         return self
         
-    def set_description(self, desc, has_existing=False):
+    def set_description(self, desc: str, has_existing=False):
         """Set the description text directly.
         
         :param desc: description text
         :param has_existing: whether this description came from an existing docstring
         :return: self for method chaining
         """
-        self.description = desc
+        if desc == self.element_name:
+            self.is_auto_generated_name = True
+        
+        if desc:
+            self.description = desc
         self.has_existing_description = has_existing
         return self
         
@@ -107,19 +116,16 @@ class CommentBuilder(object):
         self.doctests = doctests
         return self
         
-    def set_element_info(self, name, input_raw=None, is_auto_generated=False):
+    def set_element_info(self, input_raw=None):
         """Set element information.
         
-        :param name: element name
         :param input_raw: raw input docstring (optional)
-        :param is_auto_generated: whether name is auto-generated (optional)
         :return: self for method chaining
         """
-        self.element_name = name
         self.input_raw = input_raw
-        self.is_auto_generated_name = is_auto_generated
         return self
-        
+    
+    @log_function
     def _build_params_section(self, sep):
         """Build the parameters section.
         
@@ -127,7 +133,8 @@ class CommentBuilder(object):
         :return: formatted parameters section
         """
         return self.strategy.format_params_section(self.params)
-        
+    
+    @log_function  
     def _build_return_section(self, sep):
         """Build the return section.
         
@@ -139,7 +146,8 @@ class CommentBuilder(object):
             self.return_type,
             self.params
         )
-        
+
+    @log_function
     def _build_raises_section(self, sep):
         """Build the raises section.
         
@@ -194,6 +202,7 @@ class CommentBuilder(object):
         """
         return self.case_config.spaces + self.config.before_lim + self.config.quotes
     
+    @log_function
     def _build_single_line_docstring(self, desc):
         """Build a single-line docstring without sections.
         
@@ -223,6 +232,7 @@ class CommentBuilder(object):
         
         return raw.rstrip()
     
+    @log_function
     def _build_multi_line_description_only(self, desc):
         """Build a multi-line docstring without sections.
         
@@ -244,7 +254,8 @@ class CommentBuilder(object):
             raw += self.case_config.spaces + self.config.quotes
         
         return raw.rstrip()
-    
+
+    @log_function
     def _build_description_with_sections(self, desc):
         """Build the description part when sections are present.
         
@@ -252,9 +263,10 @@ class CommentBuilder(object):
         :return: description section string
         """
         result = ''
-        
-        # When there are sections (parameters/arguments), always put description on a new line
-        result += '\n' + self.case_config.spaces
+
+        if not self.config.first_line:
+            # put description on a new line
+            result += '\n' + self.case_config.spaces
         # Preserve original formatting if description came from existing docstring
         if self.has_existing_description:
             # Preserve original line breaks and formatting
@@ -263,7 +275,8 @@ class CommentBuilder(object):
             result += self._with_space(self.description).strip() + '\n'
         
         return result
-    
+
+    @log_function
     def _build_additional_sections(self):
         """Build post and doctests sections.
         
@@ -325,5 +338,10 @@ class CommentBuilder(object):
         # Add post and doctests
         raw += self._build_additional_sections()
         
-        return self._close_docstring(raw)
-
+        res = self._close_docstring(raw)
+        res = '\n'.join(
+            (l.rstrip() if l.strip() != '' else (self.case_config.spaces if self.config.indent_empty_lines else ''))
+            for l in res.splitlines()
+        )
+        
+        return res

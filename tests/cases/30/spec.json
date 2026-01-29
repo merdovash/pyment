@@ -2,7 +2,7 @@
   {
     "name": "hello_world",
     "deftype": "def",
-    "input_style": "numpydoc",
+    "input_style": "javadoc",
     "description": ""
   }
 ]

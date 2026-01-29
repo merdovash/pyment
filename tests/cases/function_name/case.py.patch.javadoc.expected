@@ -5,8 +5,8 @@
 +    """
 +    Calculate total sum
 +
-+    @param a: 
-+    @param b: 
++    @param a:
++    @param b:
 +
 +    """
      return a + b
@@ -15,14 +15,14 @@
 +    """
 +    Process user data
 +
-+    @param user_id: 
-+    @param user_name: 
++    @param user_id:
++    @param user_name:
 +
 +    """
      pass
  
  class UserAccountManager:
-+    """ UserAccountManager """
++    """UserAccountManager"""
      def __init__(self):
 +        """Initialize"""
          pass

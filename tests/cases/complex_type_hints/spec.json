@@ -1,0 +1,110 @@
+[
+  {
+    "name": "func",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func0",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": "description"
+  },
+  {
+    "name": "func1",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func2",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func3",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": "Func 3"
+  },
+  {
+    "name": "func4",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func5",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func6",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": "Func 6"
+  },
+  {
+    "name": "func7",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func8",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func9",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func10",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func11",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func12",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func13",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "func14",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": "Description of func with docstring groups style."
+  },
+  {
+    "name": "A",
+    "deftype": "class",
+    "input_style": "groups",
+    "description": ""
+  },
+  {
+    "name": "method",
+    "deftype": "def",
+    "input_style": "groups",
+    "description": ""
+  }
+]

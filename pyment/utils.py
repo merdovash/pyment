@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import functools
+import logging
 import re
 
 __author__ = "A. Daouzli"
@@ -115,3 +116,31 @@ def from_dict(dc_type: type, data: dict):
     filtered_data = {k: v for k, v in data.items() if k in class_fields}
 
     return dc_type(**filtered_data)
+
+
+def log_function(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"Вызов {func.__name__} с аргументами {args} {kwargs}")
+        try:
+            result = func(*args, **kwargs)
+            print(f"{func.__name__} вернула: {result}")
+            return result
+        except Exception as e:
+            print(f"В {func.__name__} произошла ошибка: {e}")
+            raise
+    return wrapper
+
+
+def log_generator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"--- Старт генератора {func.__name__} ---")
+        gen = func(*args, **kwargs)
+        try:
+            for item in gen:
+                print(f"Генератор {func.__name__} выдал: {item}")
+                yield item
+        finally:
+            print(f"--- Генератор {func.__name__} завершен ---")
+    return wrapper

@@ -7,18 +7,19 @@
 -    '''
 +    """
      Only working when in WinPython root directory.
- 
+-
 -    Returns:
 -    maske, data0, data1, no_motion, motion
 -    '''
++    
 +    Parameters
 +    ----------
-+
++    
 +    Returns
 +    -------
 +    
 +        maske, data0, data1, no_motion, motion
-+
++    
 +    """
      maske = read_mask('./MRR/Testdaten/55_mask.bmp')
      display(maske)

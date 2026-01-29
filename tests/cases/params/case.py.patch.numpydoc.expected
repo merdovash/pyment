@@ -12,7 +12,7 @@
 +    Parameters
 +    ----------
 +    param1 :
-+        
++
 +
 +    Returns
 +    -------
@@ -28,9 +28,9 @@
 +    Parameters
 +    ----------
 +    param1 :
-+        
++
 +    param2 :
-+        
++
 +
 +    Returns
 +    -------
@@ -46,11 +46,11 @@
 +    Parameters
 +    ----------
 +    param1 :
-+        
++
 +    param2 :
-+        
++
 +    param3 :
-+        
++
 +
 +    Returns
 +    -------
@@ -82,7 +82,7 @@
 +    Parameters
 +    ----------
 +    param1 :
-+        
++
 +    param2 :
 +        (Default value = 123)
 +
@@ -100,9 +100,9 @@
 +    Parameters
 +    ----------
 +    param1 :
-+        
++
 +    param2 :
-+        
++
 +    param3 :
 +        (Default value = 123)
 +
@@ -120,7 +120,7 @@
 +    Parameters
 +    ----------
 +    param1 :
-+        
++
 +    param2 :
 +        (Default value = None)
 +    param3 :

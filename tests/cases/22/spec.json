@@ -8,7 +8,7 @@
   {
     "name": "__init__",
     "deftype": "def",
-    "input_style": "javadoc",
+    "input_style": "google",
     "description": ""
   }
 ]

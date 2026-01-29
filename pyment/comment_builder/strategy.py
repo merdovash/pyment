@@ -2,6 +2,7 @@
 
 """Strategy pattern implementation for docstring formatting styles."""
 from pyment.configs import CaseConfig
+from pyment.utils import log_function
 
 
 class CommentFormatStrategy(object):
@@ -401,6 +402,7 @@ class DefaultStrategy(CommentFormatStrategy):
         """Get optional sections (empty for default)."""
         return []
     
+    @log_function
     def format_params_section(self, params):
         """Format parameters section in default style (javadoc/reST)."""
         raw = '\n'
