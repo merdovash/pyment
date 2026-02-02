@@ -371,8 +371,8 @@ class FileOverwriteTests(AppTestsBase):
             stdout, stderr, returncode = self.run_command(cmd_to_run)
             
             try:
-                self.assertEqual(returncode, spec.get('expected_returncode', 0))
-                self.assertEqual(stderr, spec.get('expected_stderr', ''))
+                self.assertEqual(returncode, spec.get('expected_returncode', 0), 'return code')
+                self.assertEqual(stderr, spec.get('expected_stderr', ''), 'stderr')
                 
                 # Read the overwritten file
                 with open(input_filename, 'r') as f:
@@ -439,8 +439,8 @@ class FilePatchTests(AppTestsBase):
             stdout, stderr, returncode = self.run_command(cmd_to_run)
             
             try:
-                self.assertEqual(returncode, spec.get('expected_returncode', 0))
-                self.assertEqual(stderr, spec.get('expected_stderr', ''))
+                self.assertEqual(returncode, spec.get('expected_returncode', 0), 'return code')
+                self.assertEqual(stderr, spec.get('expected_stderr', ''), 'stderr')
                 
                 # Read the patch file
                 if os.path.exists(patch_filename):

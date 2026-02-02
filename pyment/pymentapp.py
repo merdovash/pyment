@@ -98,7 +98,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
         input_style = None
 
     config = get_config(config_file, encoding=encoding)
-    tobool = lambda s: True if s.lower() == 'true' else False
+    tobool = lambda s: s if isinstance(s, bool) else (True if s.lower() == 'true' else False)
     if 'convert_only' in config:
         convert = config.pop('convert_only')
     if 'input_style' in config:
@@ -116,18 +116,18 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
 
     comment_config = CommentBuilderConfig(
         num_of_spaces=spaces,
-        quotes=config.pop('quotes') or '"""',
+        quotes=config.pop('quotes', '"""') or '"""',
         first_line=first_line,
         skip_empty=skip_empty,
-        description_on_new_line=config.pop('description_on_new_line'),
-        show_default_value=tobool(config.pop('show_default_value')) or True,
-        indent_empty_lines=tobool(config.pop('indent_empty_lines')),
+        description_on_new_line=config.pop('description_on_new_line', False),
+        show_default_value=tobool(config.pop('show_default_value', True)) or True,
+        indent_empty_lines=tobool(config.pop('indent_empty_lines', True)),
         ignore_private=ignore_private,
-        file_comment=config.pop('file_comment') or True,
-        init2class=config.pop('init2class') or True,
-        method_scope=config.pop('method_scope') or (
+        file_comment=config.pop('file_comment', False) or False,
+        init2class=config.pop('init2class', False) or False,
+        method_scope=config.pop('method_scope', None) or (
             ['public', 'protected'] if ignore_private else ['public', 'protected', 'private']),
-        type_tags=tobool(config.pop('type_tags')) or True,
+        type_tags=tobool(config.pop('type_tags', True)) or True,
         output_style=output_style,
     )
 
@@ -409,18 +409,21 @@ def _main():
     else:
         # For multiple paths, we'll use empty string and let run() handle it
         source = ''
-    
-    indent_empty_lines = not args.empty_lines_zero
 
-    has_changes = run(source, files, args.input, args.output,
-        tobool(args.first_line), args.quotes,
-        args.init2class, args.convert, config_file,
-        ignore_private, overwrite=args.overwrite,
-        spaces=args.spaces, skip_empty=args.skip_empty,
-        file_comment=args.file_comment, encoding=args.encoding,
-        description_on_new_line=args.description_on_new_line,
-        method_scope=method_scope, show_default_value=args.show_default_value,
-        type_tags=args.type_tags, indent_empty_lines=indent_empty_lines)
+    has_changes = run(
+        source=source,
+        files=files,
+        input_style=args.input,
+        output_style=args.output,
+        first_line=tobool(args.first_line),
+        convert=args.convert,
+        config_file=config_file,
+        ignore_private=ignore_private,
+        overwrite=args.overwrite,
+        spaces=args.spaces, 
+        skip_empty=args.skip_empty,
+        encoding=args.encoding,
+    )
     
     # Exit with code 0 if no changes, non-zero if changes were made
     if has_changes:
