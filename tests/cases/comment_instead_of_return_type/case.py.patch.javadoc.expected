@@ -6,7 +6,7 @@
 +    """
 +    some docstring
 +
-+    @param param: 
++    @param param:
 +
 +    """
      pass

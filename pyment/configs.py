@@ -18,10 +18,9 @@ class CommentBuilderConfig:
     before_lim: str = ''
     num_of_spaces: int = 4
     skip_empty: bool = False
-    first_line: bool = False
+    first_line: bool = True
     file_comment: bool = False
     trailing_space: str = ''
-    description_on_new_line: bool = False
     show_default_value: bool = True
     indent_empty_lines: bool = True
     ignore_private: bool = False

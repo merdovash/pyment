@@ -1,20 +1,296 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# VERY EARLY DEBUG - this should be visible if the script is executed at all
 import sys
 import glob
-import argparse
 import os
 import fnmatch
 import warnings
+from dataclasses import dataclass, field, asdict
+from typing import Literal
+
+from argparse_dataclass import ArgumentParser
 
 from pyment import PyComment
-from pyment import __version__, __copyright__, __author__, __licence__
+from pyment import (
+    __version__,
+    __copyright__,
+    __author__,
+    __licence__,
+)
 from pyment.configs import CommentBuilderConfig, ReadConfig, ActionConfig
+from pyment.utils import from_dict
 
 MAX_DEPTH_RECUR = 50
 ''' The maximum depth to reach while recursively exploring sub folders'''
+
+
+
+@dataclass
+class PymentOptions:
+    """Command-line options for the Pyment application."""
+
+    path: list[str] = field(
+        default_factory=list,
+        metadata={
+            "args": ["path"],
+            "nargs": "*",
+            "type": str,
+            "help": (
+                "python file(s) or folder(s) containing python files to proceed "
+                "(explore also sub-folders). Use '-' to read from stdin and write "
+                "to stdout. Can accept multiple files/folders."
+            ),
+        },
+    )
+    input: str = field(
+        default="auto",
+        metadata={
+            "args": ["-i", "--input"],
+            "kwargs": {
+                "metavar": "style",
+                "help": (
+                    'Input docstring style in ["javadoc", "reST", "numpydoc", '
+                    '"google", "auto"] (default autodetected)'
+                ),
+            },
+        },
+    )
+    output: Literal["javadoc", "reST", "numpydoc", "google"] = field(
+        default="reST",
+        metadata={
+            "args": ["-o", "--output"],
+            "kwargs": {
+                "metavar": "style",
+                "help": (
+                    'Output docstring style in ["javadoc", "reST", "numpydoc", "google"] (default "reST")'
+                ),
+            },
+        },
+    )
+    quotes: str = field(
+        default='"""',
+        metadata={
+            "args": ["-q", "--quotes"],
+            "kwargs": {
+                "metavar": "quotes",
+                "help": (
+                    "Type of docstring delimiter quotes: ''' or \"\"\" (default \"\"\"). "
+                    "Note that you may escape the characters using \\ like \\'\\'\\', "
+                    "or surround it with the opposite quotes like \"'''\""
+                ),
+            },
+        },
+    )
+    first_line: bool = field(
+        default=True,
+        metadata={
+            "args": ["-f", "--first-line"],
+            "kwargs": {
+                "metavar": "status",
+                "help": (
+                    "Does the comment starts on the first line after the quotes "
+                    '(default "True")'
+                ),
+            },
+        },
+    )
+    convert: bool = field(
+        default=False,
+        metadata={
+            "args": ["-t", "--convert"],
+            "kwargs": {
+                "action": "store_true",
+                "help": (
+                    "Existing docstrings will be converted but won't create missing ones"
+                ),
+            },
+        },
+    )
+    config_file: str = field(
+        default="",
+        metadata={
+            "args": ["-c", "--config-file"],
+            "kwargs": {
+                "metavar": "config",
+                "help": (
+                    "Get a Pyment configuration from a file. Note that the config "
+                    "values will overload the command line ones."
+                ),
+            },
+        },
+    )
+    init2class: bool = field(
+        default=False,
+        metadata={
+            "args": ["-d", "--init2class"],
+            "kwargs": {
+                "action": "store_true",
+                "help": "If no docstring to class, then move the __init__ one",
+            },
+        },
+    )
+    ignore_private: str = field(
+        default="True",
+        metadata={
+            "args": ["-p", "--ignore-private"],
+            "kwargs": {
+                "metavar": "status",
+                "help": (
+                    "[DEPRECATED] Don't proceed the private methods/functions starting "
+                    'with __ (two underscores) (default "True"). Use --method-scope '
+                    "instead. This option will be removed in a future version."
+                ),
+            },
+        },
+    )
+    overwrite: bool = field(
+        default=False,
+        metadata={
+            "args": ["-w", "--write"],
+            "kwargs": {
+                "action": "store_true",
+                "help": (
+                    "Don't write patches. Overwrite files instead. If used with path "
+                    "- won't overwrite but write to stdout the new content instead of "
+                    "a patch/."
+                ),
+            },
+        },
+    )
+    spaces: int = field(
+        default=4,
+        metadata={
+            "args": ["-s", "--spaces"],
+            "kwargs": {
+                "metavar": "spaces",
+                "type": int,
+                "help": (
+                    "The default number of spaces to use for indenting on output. "
+                    "Default is 4."
+                ),
+            },
+        },
+    )
+    skip_empty: bool = field(
+        default=False,
+        metadata={
+            "args": ["-e", "--skip-empty"],
+            "kwargs": {
+                "action": "store_true",
+                "help": (
+                    "Don't write params, returns, or raises sections if they are empty."
+                ),
+            },
+        },
+    )
+    file_comment: bool = field(
+        default=False,
+        metadata={
+            "args": ["--file-comment"],
+            "kwargs": {
+                "action": "store_true",
+                "help": (
+                    "Add a file comment with the file name at the beginning of the file."
+                ),
+            },
+        },
+    )
+    extensions: str = field(
+        default=None,
+        metadata={
+            "args": ["--extensions"],
+            "kwargs": {
+                "metavar": "extensions",
+                "help": (
+                    'Comma-separated list of file extensions to process (e.g., "py,js"). '
+                    "Extensions can include or omit the leading dot."
+                ),
+            },
+        },
+    )
+    encoding: str = field(
+        default="utf-8",
+        metadata={
+            "args": ["--encoding"],
+            "kwargs": {
+                "metavar": "encoding",
+                "help": (
+                    'The encoding to use when reading and writing files '
+                    '(default "utf-8"). Examples: utf-8, latin1, cp1252.'
+                ),
+            },
+        },
+    )
+    exclude: str = field(
+        default=None,
+        metadata={
+            "args": ["--exclude"],
+            "kwargs": {
+                "metavar": "patterns",
+                "help": (
+                    'Comma-separated list of filename patterns to exclude '
+                    '(supports Unix shell-style wildcards, e.g., '
+                    '"test_*.py,*_test.py"). Patterns match against the filename '
+                    "or full path."
+                ),
+            },
+        },
+    )
+    method_scope: str = field(
+        default=None,
+        metadata={
+            "args": ["--method-scope"],
+            "kwargs": {
+                "metavar": "scope",
+                "help": (
+                    "Method scope to process: public, protected, or private. Can be "
+                    "specified as a single value (e.g., --method-scope=public) or "
+                    "comma-separated values (e.g., --method-scope=public,protected). "
+                    "Default processes all methods."
+                ),
+            },
+        },
+    )
+    show_default_value: bool = field(
+        default=True,
+        metadata={
+            "args": ["--no-show-default-value"],
+            "kwargs": {
+                "action": "store_false",
+                "help": (
+                    "Do not include \"(Default value = ...)\" in parameter descriptions."
+                ),
+            },
+        },
+    )
+    type_tags: bool = field(
+        default=True,
+        metadata={
+            "args": ["--no-type-tags"],
+            "kwargs": {
+                "action": "store_false",
+                "help": (
+                    "Do not include :type and :rtype: fields in generated docstrings "
+                    "(reST/javadoc styles)."
+                ),
+            },
+        },
+    )
+    empty_lines_zero: bool = field(
+        default=False,
+        metadata={
+            "args": ["--empty-lines-zero"],
+            "kwargs": {
+                "action": "store_true",
+                "help": (
+                    "Format completely empty lines in generated docstrings at zero "
+                    "indentation level instead of the comment indentation level."
+                ),
+            },
+        },
+    )
+
 
 
 def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions=None, exclude=None):
@@ -62,81 +338,25 @@ def get_files_from_dir(path, recursive=True, depth=0, file_ext='.py', extensions
     return file_list
 
 
-def get_config(config_file, encoding='utf-8'):
-    """Get the configuration from a file.
-
-    @param config_file: the configuration file
-    @param encoding: the encoding to use when reading the config file (default 'utf-8')
-    @return: the configuration
-    @rtype: dict
-
-    """
-    config = {}
-    tobool = lambda s: True if s.lower() == 'true' else False
-    if config_file:
-        try:
-            with open(config_file, 'r', encoding=encoding) as f:
-                for line in f.readlines():
-                    if len(line.strip()):
-                        key, value = line.split("=", 1)
-                        key, value = key.strip(), value.strip()
-                        if key in ['init2class', 'first_line', 'convert_only', 'file_comment',
-                                   'description_on_new_line', 'type_tags', 'indent_empty_lines']:
-                            value = tobool(value)
-                        if key == 'indent':
-                            value = int(value)
-                        config[key] = value
-        except:
-            print ("Unable to open configuration file '{0}'".format(config_file))
-    return config
-
-
-def run(source, files=[], input_style='auto', output_style='reST', first_line=True,
-        convert=False, config_file=None, ignore_private=False, overwrite=False, spaces=4,
-        skip_empty=False, encoding='utf-8',):
-    if input_style == 'auto':
-        input_style = None
-
-    config = get_config(config_file, encoding=encoding)
-    tobool = lambda s: s if isinstance(s, bool) else (True if s.lower() == 'true' else False)
-    if 'convert_only' in config:
-        convert = config.pop('convert_only')
-    if 'input_style' in config:
-        input_style = config.pop('input_style')
-    if 'output_style' in config:
-        output_style = config.pop('output_style')
-    if 'first_line' in config:
-        first_line = config.pop('first_line')
-    if 'encoding' in config:
-        encoding = config.pop('encoding')
-    
+def run(source, args: PymentOptions, files=[]):    
     # Track changes across all files
     files_changed = []
     has_changes = False
 
-    comment_config = CommentBuilderConfig(
-        num_of_spaces=spaces,
-        quotes=config.pop('quotes', '"""') or '"""',
-        first_line=first_line,
-        skip_empty=skip_empty,
-        description_on_new_line=config.pop('description_on_new_line', False),
-        show_default_value=tobool(config.pop('show_default_value', True)) or True,
-        indent_empty_lines=tobool(config.pop('indent_empty_lines', True)),
-        ignore_private=ignore_private,
-        file_comment=config.pop('file_comment', False) or False,
-        init2class=config.pop('init2class', False) or False,
-        method_scope=config.pop('method_scope', None) or (
-            ['public', 'protected'] if ignore_private else ['public', 'protected', 'private']),
-        type_tags=tobool(config.pop('type_tags', True)) or True,
-        output_style=output_style,
-    )
+    comment_config = from_dict(CommentBuilderConfig, {
+        **asdict(args),
+        'method_scope': args.method_scope or (
+        ['public', 'protected'] if args.ignore_private else ['public', 'protected', 'private']),
+        'indent_empty_lines': not args.empty_lines_zero,
+    })
+    
 
     read_config = ReadConfig(
-        encoding=encoding or 'utf-8',
+        encoding=args.encoding or 'utf-8',
     )
 
     action_config = ActionConfig(
-        convert_only=convert,
+        convert_only=args.convert,
     )
 
     for f in files:
@@ -155,7 +375,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
                 comment_config=comment_config,
                 read_config=read_config,
                 action_config=action_config,
-                input_style=input_style,
+                input_style=args.input,
             )
             c.proceed()
             if comment_config.init2class:
@@ -165,7 +385,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             list_from, list_to = c.compute_before_after()
             file_changed = list_from != list_to
 
-            if overwrite:
+            if args.overwrite:
                 lines_to_write = list_to
             else:
                 lines_to_write = c.get_patch_lines(path, path)
@@ -173,7 +393,8 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             # Debug: Print change status for this file
             if f != '-':
                 if file_changed:
-                    print(f"DEBUG: Changes detected in {f} on lines {','.join(str(i) for i, (a,b) in enumerate(zip(list_from, list_to)) if a != b)}", file=sys.stderr)
+                    print(f"DEBUG: Changes detected in {f}", file=sys.stderr)
+                    print(''.join(c.get_patch_lines(path, path)), file=sys.stderr)
                     files_changed.append(f)
                 else:
                     print(f"DEBUG: No changes in {f}", file=sys.stderr)
@@ -184,7 +405,7 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
             if f == '-':
                 sys.stdout.writelines(lines_to_write)
             else:
-                if overwrite:
+                if args.overwrite:
                     if file_changed:
                         c.overwrite_source_file(lines_to_write)
                 else:
@@ -211,74 +432,28 @@ def run(source, files=[], input_style='auto', output_style='reST', first_line=Tr
 
 
 def _main():   
-    desc = 'Pyment v{0} - {1} - {2} - {3}'.format(__version__, __copyright__, __author__, __licence__)
-    parser = argparse.ArgumentParser(description='Generates patches after (re)writing docstrings.')
-    parser.add_argument('path', type=str, nargs='*',
-                        help='python file(s) or folder(s) containing python files to proceed (explore also sub-folders). Use "-" to read from stdin and write to stdout. Can accept multiple files/folders.')
-    parser.add_argument('-i', '--input', metavar='style', default='auto',
-                        dest='input', help='Input docstring style in ["javadoc", "reST", "numpydoc", "google", "auto"] (default autodetected)')
-    parser.add_argument('-o', '--output', metavar='style', default="reST",
-                        dest='output', help='Output docstring style in ["javadoc", "reST", "numpydoc", "google"] (default "reST")')
-    parser.add_argument('-q', '--quotes', metavar='quotes', default='"""',
-                        dest='quotes', help='Type of docstring delimiter quotes: \'\'\' or \"\"\" (default \"\"\"). Note that you may escape the characters using \\ like \\\'\\\'\\\', or surround it with the opposite quotes like \"\'\'\'\"')
-    parser.add_argument('-f', '--first-line', metavar='status', default="True",
-                        dest='first_line', help='Does the comment starts on the first line after the quotes (default "True")')
-    parser.add_argument('-t', '--convert', action="store_true", default=False,
-                        help="Existing docstrings will be converted but won't create missing ones")
-    parser.add_argument('-c', '--config-file', metavar='config', default="",
-                        dest='config_file', help='Get a Pyment configuration from a file. Note that the config values will overload the command line ones.')
-    parser.add_argument('-d', '--init2class', help='If no docstring to class, then move the __init__ one',
-                        action="store_true")
-    parser.add_argument('-p', '--ignore-private', metavar='status', default="True",
-                        dest='ignore_private', help='[DEPRECATED] Don\'t proceed the private methods/functions starting with __ (two underscores) (default "True"). Use --method-scope instead. This option will be removed in a future version.')
-    parser.add_argument('-v', '--version', action='version',
-                        version=desc)
-    parser.add_argument('-w', '--write', action='store_true', dest='overwrite',
-                        default=False, help="Don't write patches. Overwrite files instead. If used with path '-' won\'t overwrite but write to stdout the new content instead of a patch/.")
-    parser.add_argument('-s', '--spaces', metavar='spaces', dest='spaces', default=4, type=int,
-                        help="The default number of spaces to use for indenting on output. Default is 4.")
-    parser.add_argument('-e', '--skip-empty', action='store_true', dest='skip_empty',
-                        default=False,
-                        help="Don't write params, returns, or raises sections if they are empty.")
-    parser.add_argument('--file-comment', action='store_true', dest='file_comment',
-                        default=False,
-                        help="Add a file comment with the file name at the beginning of the file.")
-    parser.add_argument('--extensions', metavar='extensions', dest='extensions',
-                        default=None,
-                        help='Comma-separated list of file extensions to process (e.g., "py,js"). Extensions can include or omit the leading dot.')
-    parser.add_argument('--encoding', metavar='encoding', dest='encoding', default='utf-8',
-                        help='The encoding to use when reading and writing files (default "utf-8"). Examples: utf-8, latin1, cp1252.')
-    parser.add_argument('--exclude', metavar='patterns', dest='exclude',
-                        default=None,
-                        help='Comma-separated list of filename patterns to exclude (supports Unix shell-style wildcards, e.g., "test_*.py,*_test.py"). Patterns match against the filename or full path.')
-    parser.add_argument('--description-on-new-line',
-                        action='store_true',
-                        dest='description_on_new_line',
-                        default=False,
-                        help='Place description text on a new line even for single-line docstrings without parameters.')
-    parser.add_argument('--method-scope', metavar='scope', dest='method_scope',
-                        default=None,
-                        help='Method scope to process: public, protected, or private. Can be specified as a single value (e.g., --method-scope=public) or comma-separated values (e.g., --method-scope=public,protected). Default processes all methods.')
-    parser.add_argument('--no-show-default-value', action='store_false', dest='show_default_value',
-                        default=True,
-                        help='Do not include "(Default value = ...)" in parameter descriptions.')
-    parser.add_argument('--no-type-tags', action='store_false', dest='type_tags',
-                        default=True,
-                        help='Do not include :type and :rtype: fields in generated docstrings (reST/javadoc styles).')
-    parser.add_argument('--empty-lines-zero', action='store_true',
-                        dest='empty_lines_zero',
-                        default=False,
-                        help='Format completely empty lines in generated docstrings at zero indentation level instead of the comment indentation level.')
-    # parser.add_argument('-c', '--config', metavar='config_file',
-    #                   dest='config', help='Configuration file')
+    desc = "Pyment v{0} - {1} - {2} - {3}".format(
+        __version__,
+        __copyright__,
+        __author__,
+        __licence__,
+    )
+
+    parser = ArgumentParser(
+        PymentOptions,
+        description="Generates patches after (re)writing docstrings.",
+    )
+    # Keep explicit version flag behavior
+    parser.add_argument("-v", "--version", action="version", version=desc)
 
     args = parser.parse_args()
     
     # Handle paths: support both single path (backward compatibility) and multiple paths (pre-commit hook)
     paths = args.path if args.path else []
     
-    sys.stderr.write(f"DEBUG: Paths received: {paths}\n")
+    sys.stderr.write(f"DEBUG: Args received: {asdict(args)}\n")
     sys.stderr.flush()
+    
     
     # If no paths provided, show error
     if not paths:
@@ -302,18 +477,6 @@ def _main():
         # Split by comma and strip whitespace
         exclude = [pattern.strip() for pattern in args.exclude.split(',') if pattern.strip()]
 
-    # Parse method_scope if provided (comma-separated string)
-    method_scope = None
-    if args.method_scope:
-        # Split by comma and normalize to lowercase
-        scope_list = [s.strip().lower() for s in args.method_scope.split(',') if s.strip()]
-        # Validate scope values
-        valid_scopes = ['public', 'protected', 'private']
-        invalid_scopes = [s for s in scope_list if s not in valid_scopes]
-        if invalid_scopes:
-            parser.error(f"Invalid method scope(s): {', '.join(invalid_scopes)}. Valid scopes are: {', '.join(valid_scopes)}")
-        method_scope = scope_list
-    
     # Convert deprecated ignore_private to method_scope
     tobool = lambda s: True if s.lower() == 'true' else False
     ignore_private = tobool(args.ignore_private)
@@ -324,13 +487,6 @@ def _main():
             DeprecationWarning,
             stacklevel=2
         )
-        # Convert ignore_private=True to method_scope=['public', 'protected']
-        if method_scope is None:
-            method_scope = ['public', 'protected']
-        elif 'private' in method_scope:
-            # If method_scope explicitly includes private but ignore_private is True,
-            # remove private from the list
-            method_scope = [s for s in method_scope if s != 'private']
     
     # Helper function to check if a file should be included
     def should_include_file(filepath):
@@ -396,11 +552,6 @@ def _main():
         sys.stderr.write("DEBUG: No files to process after filtering - exiting with code 0\n")
         sys.stderr.flush()
         sys.exit(0)
-    
-    if not args.config_file:
-        config_file = ''
-    else:
-        config_file = args.config_file
 
     # Determine source for run() function - use first path if single, or empty string if multiple
     # The run() function uses source to determine relative paths for patches
@@ -411,18 +562,9 @@ def _main():
         source = ''
 
     has_changes = run(
-        source=source,
-        files=files,
-        input_style=args.input,
-        output_style=args.output,
-        first_line=tobool(args.first_line),
-        convert=args.convert,
-        config_file=config_file,
-        ignore_private=ignore_private,
-        overwrite=args.overwrite,
-        spaces=args.spaces, 
-        skip_empty=args.skip_empty,
-        encoding=args.encoding,
+        source,
+        args,
+        files 
     )
     
     # Exit with code 0 if no changes, non-zero if changes were made

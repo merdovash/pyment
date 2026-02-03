@@ -211,7 +211,7 @@ class CommentBuilder(object):
         """
         raw = self._build_docstring_start()
         
-        if self.config.description_on_new_line:
+        if not self.config.first_line:
             # Put description on its own line and close on a new line as well
             raw += '\n' + self.case_config.spaces + (desc if desc else self.config.trailing_space)
             raw += '\n' + self.case_config.spaces + self.config.quotes

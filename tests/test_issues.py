@@ -40,17 +40,17 @@ ISSUES = [
     ('47', {'first_line': True}, False),
     ('from_numpydoc', {'first_line': True, 'indent_empty_lines': False}, False),
     ('google_wrong_inner_indentation', {'first_line': True, 'indent_empty_lines': False}, False),
-    ('comment_instead_of_return_type', {'indent_empty_lines': False}, False),
-    ('default_composite', {'indent_empty_lines': False}, False),
+    ('comment_instead_of_return_type', {'first_line': False,'indent_empty_lines': False}, False),
+    ('default_composite', {'first_line': False,'indent_empty_lines': False}, False),
     ('commented_magic_methods', {'ignore_private': True}, True),
     ('method_scope_public', {'method_scope': ['public'], 'indent_empty_lines': False}, True),
     ('multiline_param_description', {'indent_empty_lines': False}, False),
-    ('async_functions', {'indent_empty_lines': False}, False),
+    ('async_functions', {'indent_empty_lines': False, 'first_line': False}, False),
     ('special_string_types', {'indent_empty_lines': False}, False),
     ('complex_type_hints', {'indent_empty_lines': False}, False),
     ('params_descriptions_tight', {'indent_empty_lines': False, 'first_line': True,}, False),
     ('different_styles_in_one_file', {'first_line': True, 'indent_empty_lines': False,}, False),
-    ('triplequoted', {'indent_empty_lines': False,}, False),
+    ('triplequoted', {'indent_empty_lines': False, 'first_line': False,}, False),
     ('function_name', {'indent_empty_lines': False}, False),
     ('params', {'indent_empty_lines': False}, False),
     ('free_cases', {}, False),
@@ -58,13 +58,14 @@ ISSUES = [
     ('docs_already_javadoc', {'indent_empty_lines': False}, False),
     ('docs_already_numpydoc', {'indent_empty_lines': False}, False),
     ('docs_already_google', {'indent_empty_lines': False, 'first_line': True,}, False),
-    ('already_good', {'skip_empty': True, 'indent_empty_lines': False, 'type_tags': True}, False),
-    ('already_good_big', {'description_on_new_line': True, 'method_scope': 'public', 'file_comment': True, 'indent_empty_lines': False}, False),
+    ('already_good', {'skip_empty': True, 'indent_empty_lines': False, 'type_tags': True, 'first_line': False}, False),
+    ('already_good_big', {'first_line': False, 'method_scope': 'public', 'file_comment': True, 'indent_empty_lines': False}, False),
     ('comment_by_name_with_args', {'first_line': True, 'indent_empty_lines': False}, False),
     ('type_tags', {'type_tags': False, 'indent_empty_lines': False}, False),
-    ('no_params', {'type_tags': False, 'description_on_new_line': True, 'method_scope': 'public', 'indent_empty_lines': False}, False),
-    ('without_indent', {'type_tags': False, 'description_on_new_line': True, 'indent_empty_lines': False}, False),
-    ('with_indent', {'type_tags': False, 'description_on_new_line': True, 'indent_empty_lines': True}, False),
+    ('no_params', {'type_tags': False, 'first_line': False, 'method_scope': 'public', 'indent_empty_lines': False}, False),
+    ('without_indent', {'type_tags': False, 'first_line': False, 'indent_empty_lines': False}, False),
+    ('with_indent', {'type_tags': False, 'first_line': False, 'indent_empty_lines': True}, False),
+    ('multiline_comment', {'type_tags': False, 'first_line': False, 'indent_empty_lines': False}, False),
 ]
 
 
@@ -105,7 +106,7 @@ class Issue(unittest.TestCase):
     def test_full(self):
         """Parameterized test for all issue tests across all strategies"""
         for strategy in STRATEGIES:
-            with self.subTest(strategy):
+            with self.subTest(msg=strategy):
                 # Create kwargs for this strategy
                 kwargs = self.kwargs.copy()
                 kwargs['output_style'] = strategy
@@ -115,9 +116,9 @@ class Issue(unittest.TestCase):
                 expected_file = os.path.join('cases', self.folder_name, f'case.py.patch.{strategy}.expected')
                 
                 # For expected failures, wrap the test execution
-                self._run_test(file_name, expected_file, kwargs, self.use_proceed)
+                self._run_test(file_name, expected_file, kwargs, self.use_proceed, strategy)
 
-    def _run_test(self, file_name, expected_file, kwargs, use_proceed):
+    def _run_test(self, file_name, expected_file, kwargs, use_proceed, strategy):
         """Helper method to run the actual test"""
         # Load expected result
         expected_path = absdir(expected_file)
@@ -141,7 +142,7 @@ class Issue(unittest.TestCase):
             p.proceed()
         else:
             p._parse()
-            self.assertTrue(p.parsed)
+            self.assertTrue(p.parsed, msg=strategy)
         
         # Get result
         result = ''.join(p.diff())
@@ -171,7 +172,7 @@ class Issue(unittest.TestCase):
             except Exception as e:
                 # If we can't write the file, log it but don't hide the original error
                 print(f"Warning: Could not write actual file '{actual_file}': {e}")
-        self.assertEqual(expected, result)
+        self.assertEqual(expected, result, msg=strategy)
 
     def _remove_diff_header(self, diff):
         """Remove diff header lines (like @@ -1,36 +1,87 @@) from diff"""

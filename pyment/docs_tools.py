@@ -40,7 +40,6 @@ class DocToolsBase(object):
         :param section_headers:
         :type section_headers:
         """
-        self.first_line = first_line
         self.optional_sections = list(optional_sections)
         self.excluded_sections = list(excluded_sections)
         self.opt = opt

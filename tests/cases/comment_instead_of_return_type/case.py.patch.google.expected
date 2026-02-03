@@ -7,7 +7,7 @@
 +    some docstring
 +
 +    Args:
-+        param: 
++        param:
 +
 +    Returns:
 +

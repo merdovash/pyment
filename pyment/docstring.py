@@ -717,7 +717,7 @@ class DocString(object):
         
         # Set data in builder
         builder.set_name(self.element.name)
-        builder.set_description(self.docs['out']['desc'].strip(), has_existing=bool(self.docs['in']['desc'] and self.docs['in']['desc'].strip()))
+        builder.set_description(dedent(self.docs['out']['desc']).strip(), has_existing=bool(self.docs['in']['desc'] and self.docs['in']['desc'].strip()))
         builder.set_params(self.docs['out']['params'])
         builder.set_return(self.docs['out']['return'], self.docs['out']['rtype'])
         builder.set_raises(self.docs['out']['raises'])

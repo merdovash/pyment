@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import functools
-import logging
 import re
+import os
 
 __author__ = "A. Daouzli"
 __copyright__ = "Copyright 2012-2018, A. Daouzli; Copyright 2026, V. Schekochihin"
@@ -10,8 +10,10 @@ __version__ = "0.5.0"
 __maintainer__ = "V. Schekochihin"
 
 from dataclasses import fields
+from typing import TypeVar
 
 RAISES_NAME_REGEX = r'^([\w.]+)'
+T = TypeVar('T')
 
 
 def isin_alone(elems, line):
@@ -111,36 +113,49 @@ def normalize_default_value(default_value):
     return normalized
 
 
-def from_dict(dc_type: type, data: dict):
+def from_dict(dc_type: type[T], data: dict) -> T:
     class_fields = {f.name for f in fields(dc_type)}
     filtered_data = {k: v for k, v in data.items() if k in class_fields}
 
     return dc_type(**filtered_data)
 
 
+# Get the directory where this script is located
+current_file_path = os.path.abspath(__file__)
+
+# Check for typical installation directory names
+is_installed = "site-packages" in current_file_path or "dist-packages" in current_file_path
+
+
 def log_function(func):
+    if is_installed:
+        return func
+    
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        print(f"Вызов {func.__name__} с аргументами {args} {kwargs}")
+        print(f"Call {func.__name__} with args {args} {kwargs}")
         try:
             result = func(*args, **kwargs)
-            print(f"{func.__name__} вернула: {result}")
+            print(f"{func.__name__} returns: {result}")
             return result
         except Exception as e:
-            print(f"В {func.__name__} произошла ошибка: {e}")
+            print(f"В {func.__name__} error: {e}")
             raise
     return wrapper
 
 
 def log_generator(func):
+    if is_installed:
+        return func
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        print(f"--- Старт генератора {func.__name__} ---")
+        print(f"--- Start {func.__name__} ---")
         gen = func(*args, **kwargs)
         try:
             for item in gen:
-                print(f"Генератор {func.__name__} выдал: {item}")
+                print(f"{func.__name__} yields: {item}")
                 yield item
         finally:
-            print(f"--- Генератор {func.__name__} завершен ---")
+            print(f"--- {func.__name__} finished ---")
     return wrapper

@@ -421,8 +421,6 @@ class PyComment(object):
                     elem_list.pop(i)
                 else:
                     i += 1
-        for e in elem_list:
-            print('ffff' + repr(e['docs']))
         self.docs_list = elem_list
 
         self.parsed = True

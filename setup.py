@@ -36,6 +36,9 @@ setup(name='Pyment',
           ],
       url='https://github.com/merdovash/pyment',
       packages=find_packages(),
+      install_requires=[
+          'argparse-dataclass',
+      ],
       test_suite='tests.test_all',
       entry_points={
         'console_scripts': [

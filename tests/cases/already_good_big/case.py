@@ -23,7 +23,7 @@ class _Collector(metaclass=TransactionBoundSingleton):
         """
         Fooo
 
-        :param link: 
+        :param link:
         :type link: ILink
 
         """
@@ -45,7 +45,7 @@ class UiNotification(ILinkOperationsHandler):
     def process(self):
         """
         Baz
-        
+
         :return:
         """
         pass
