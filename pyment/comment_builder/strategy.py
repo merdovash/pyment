@@ -421,7 +421,7 @@ class DefaultStrategy(CommentFormatStrategy):
                 if not l.strip() and not self.config.indent_empty_lines:
                     lines.append('')
                 else:
-                    lines.append(self.case_config.spaces + '\t' + l.lstrip())
+                    lines.append(self.case_config.spaces + '    ' + l.lstrip())
             return '\n'.join(lines)
         
         if len(params):

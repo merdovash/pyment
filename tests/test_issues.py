@@ -44,7 +44,7 @@ ISSUES = [
     ('default_composite', {'first_line': False,'indent_empty_lines': False}, False),
     ('commented_magic_methods', {'ignore_private': True}, True),
     ('method_scope_public', {'method_scope': ['public'], 'indent_empty_lines': False}, True),
-    ('multiline_param_description', {'indent_empty_lines': False}, False),
+    ('multiline_param_description', {'indent_empty_lines': False, 'type_tags': False}, False),
     ('async_functions', {'indent_empty_lines': False, 'first_line': False}, False),
     ('special_string_types', {'indent_empty_lines': False}, False),
     ('complex_type_hints', {'indent_empty_lines': False}, False),
