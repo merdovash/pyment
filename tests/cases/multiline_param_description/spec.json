@@ -34,5 +34,17 @@
     "deftype": "def",
     "input_style": "reST",
     "description": ""
+  },
+  {
+    "name": "Foo",
+    "deftype": "class",
+    "input_style": "reST",
+    "description": "Foo"
+  },
+  {
+    "name": "bar",
+    "deftype": "def",
+    "input_style": "reST",
+    "description": "description description"
   }
 ]

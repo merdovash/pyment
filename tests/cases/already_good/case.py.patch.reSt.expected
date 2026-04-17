@@ -1,0 +1,11 @@
+--- a/case.py
++++ b/case.py
+@@ -9,8 +9,6 @@
+         :param regl_id: (Default value = None)
+         :param uuid: (Default value = None)
+         :param pd_type: (Default value = None)
+-        :rtype: tuple[int,str]
+-
+         """
+         if regl_id and uuid:
+             return regl_id, uuid

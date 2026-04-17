@@ -56,3 +56,15 @@ def func6(param1: list, param2):
     """
     pass
 
+
+class Foo:
+    """ Foo """
+    def bar(self, arg_my: bool):
+        """description description
+
+        :param arg_my: description arg_my description arg_my description arg_my description arg_my
+            description arg_my description arg_my description arg_my
+        :type arg_my: bool
+
+        """
+        return 

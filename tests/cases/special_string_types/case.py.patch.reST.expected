@@ -1,6 +1,6 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,17 +1,22 @@
+@@ -1,17 +1,21 @@
  def foo():
 +    """Foo"""
      __doc__ = """\
@@ -9,8 +9,7 @@
  
  def bar(param):
 -    r"""this is a docstring
-+    """
-+    this is a docstring
++    """this is a docstring
 +
 +    :param param:
 +

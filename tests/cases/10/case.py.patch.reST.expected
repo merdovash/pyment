@@ -1,16 +1,16 @@
 --- a/case.py
 +++ b/case.py
-@@ -12,12 +12,13 @@
+@@ -12,12 +12,12 @@
  
  
  def init_test():
 -    '''
-+    """
-     Only working when in WinPython root directory.
+-    Only working when in WinPython root directory.
 -
 -    Returns:
 -    maske, data0, data1, no_motion, motion
 -    '''
++    """Only working when in WinPython root directory.
 +    
 +    
 +    :returns: maske, data0, data1, no_motion, motion

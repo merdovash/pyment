@@ -1,9 +1,9 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,8 +1,11 @@
+@@ -1,8 +1,10 @@
  def func(p):
-     """
-+    Func
+-    """
++    """Func
 +    
      :param p: blabla
      :type p: ptype

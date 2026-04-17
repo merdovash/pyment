@@ -1,10 +1,10 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,7 +1,10 @@
+@@ -1,7 +1,9 @@
  def test():
-     """
+-    """
 -
-+    Test
++    """Test
 +    
 +    
      :raises ValueError: on incorrect JSON

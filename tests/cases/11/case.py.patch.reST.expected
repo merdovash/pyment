@@ -1,9 +1,9 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,5 +1,10 @@
+@@ -1,5 +1,9 @@
  def meaning(subject, answer=False):
-     """
-+    Meaning
+-    """
++    """Meaning
 +    
 +    :param subject:
 +    :param answer: (Default value = False)

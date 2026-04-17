@@ -1,7 +1,10 @@
 --- a/case.py
 +++ b/case.py
-@@ -3,9 +3,9 @@
-     Function 1
+@@ -1,24 +1,22 @@
+ def func1(param1):
+-    """
+-    Function 1
++    """Function 1
      with 1 param
  
 -    @param param1: 1st parameter
@@ -13,8 +16,12 @@
  
      """
      return None
-@@ -16,9 +16,9 @@
-     Function 2
+ 
+ 
+ def func2(param1, param2):
+-    """
+-    Function 2
++    """Function 2
      with 2 params
  
 -    @param param1: 1st parameter

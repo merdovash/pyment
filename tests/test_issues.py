@@ -17,9 +17,9 @@ absdir = lambda f: os.path.join(current_dir, f)
 
 # All supported strategies
 STRATEGIES = [
-    'google',
-    'javadoc',
-    'numpydoc',
+    # 'google',
+    # 'javadoc',
+    # 'numpydoc',
     'reST',
 ]
 

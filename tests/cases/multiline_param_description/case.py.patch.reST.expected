@@ -1,10 +1,10 @@
 --- a/case.py
 +++ b/case.py
-@@ -1,58 +1,82 @@
+@@ -1,58 +1,76 @@
  def func(param_file, mask):
-     """
+-    """
 -    :param lxml.etree.ElementTree param_file: xml-element tree
-+    Func
++    """Func
 +
 +    :param param_file: xml-element tree
          obtained from the file.
@@ -18,10 +18,10 @@
  
  
  def func2(param1: str, param2):
-     """
+-    """
 -    :param str param1: description 1
 -    :param str param2: description 2
-+    Func2
++    """Func2
 +
 +    :param param1: description 1
 +    :type param1: str
@@ -34,8 +34,8 @@
  
  
  def func3(param1: str, param2):
-     """
-+    Func3
+-    """
++    """Func3
 +
      :param param1: description 1 is
          a multiline description
@@ -50,8 +50,8 @@
  
  
  def func4(param1, param2):
-     """
-+    Func4
+-    """
++    """Func4
 +
      :param param1: description 1
      :type param1: str
@@ -65,10 +65,10 @@
  
  
  def func5(param1, param2):
-     """
+-    """
 -    :param int param1: description 1
 -    :type param1: str
-+    Func5
++    """Func5
 +
 +    :param param1: description 1
 +    :type param1: int
@@ -80,10 +80,10 @@
  
  
  def func6(param1: list, param2):
-     """
+-    """
 -    :param int param1: description 1
 -    :type param1: str
-+    Func6
++    """Func6
 +
 +    :param param1: description 1
 +    :type param1: list
